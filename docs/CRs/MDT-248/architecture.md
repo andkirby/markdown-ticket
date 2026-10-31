@@ -1,118 +1,88 @@
 # Architecture: MDT-248
 
-## Overview
+## Current target and implementation gap
 
-The ticket viewer hosts a side reading pane. Three decisions carry the design: (1) document delivery becomes a **React context seam at SmartLink** — the ticket viewer provides a handler, every other surface keeps today's router navigation untouched; (2) the pane session is a **hook-owned state machine** (`useSidePane`) living exactly one modal lifetime, with browser-tab history and per-entry scroll memory; (3) the modal gains an additive **`split` width tier** and switches its body to two internal scroll regions while the pane is visible, with an explicit scroll-position transfer so the ticket column never jumps.
+UAT r12 extends the same ticket. [UX contract](ux-design.md) and canonical architecture trace describe the target. Current code still uses ticket-owned bare-path reference sessions, folder-depth tabs and floating reference history. The original designs/ticket-side-doc POC is historical, not normative for r12.
 
-Pattern: *hosted secondary surface* — same pattern as the trace shell (a capability the ticket viewer mounts around its content), but inline rather than full-viewport. Chosen over extending `TicketDocumentTabs` (tabs hide content — the job is reference) and over the docs-zai workspace model (pane management is out of scope; `designs/ticket-side-doc/decisions.md` records the rejected options).
+## Ownership
 
-## Module Boundaries
+| Owner / seam | Current responsibility | Required refinement |
+| --- | --- | --- |
+| TicketViewer/index.tsx | Main route context, reference integration, persistence and scroll transfer | One reader context; atomic project transitions; shared header; promotion and fullscreen without duplicate navigation truth |
+| useSidePane.ts | Reference hist/hi/scroll/title/visibility | Project-scoped sessions with project-qualified document identity |
+| TicketSidePane.tsx | Fetch, path cache, reference rendering, chrome | Fetch/cache/error fallback by source identity; pinned toolbar and source-ticket picker |
+| config/sidePaneSessions.ts | Browser persistence keyed by project+ticket | Independent bounded project histories; safe legacy handling |
+| useTicketDocumentNavigation.ts | Main subdoc selection and route synchronization | Retain canonical file resolution; main Back/Forward stores full visited location/scroll |
+| TicketDocumentTabs.tsx | Folder-depth tabs | Replace presentation with searchable document tree; explicit Open beside action |
+| CompactTicketHeader.tsx | Key/title, badge flow, actions | Shared main identity, device disclosure and icon actions; document mode after repository promotion |
+| SmartLink/documentDelivery.ts + SmartLink | Delivery seam; default inert outside viewer | Explicit destination intent with qualified source; retain ordinary link classification and external behavior |
+| Modal + colocated reader CSS | Dialog base, split geometry | Reuse focus/portal/close primitives; scoped reader work surface and fullscreen variant |
+| Browser preference owner | Lightweight visual settings | One device-wide details state, independent from project histories and card badge filters |
 
-| Module | Owns | Does not own |
-|--------|------|--------------|
-| `SmartLink/documentDelivery.ts` (new) | the `DocumentDeliveryContext` + `useDocumentDelivery()` hook; default `null` | what delivery means |
-| `SmartLink/index.tsx` | deciding, at click time, whether a DOCUMENT link is pane-delivered (context handler + `normalizedLink.filePath` present, link not flagged) or router-navigated | pane behavior |
-| `TicketViewer/useSidePane.ts` (new) | session state machine: history stack, index, scroll map, visible flag; open/back/fwd/hide/reveal/discard | rendering, fetching |
-| `TicketViewer/TicketSidePane.tsx` (+ css, new) | pane chrome (header, history controls, hand-off, close), document fetch + render, loading/error states, the session pill | session truth (owned by `useSidePane`) |
-| `TicketViewer/index.tsx` | composition: provides delivery context, mounts pane + pill, modal size/Escape gating, scroll transfer | — |
-| `ui/Modal.tsx` + `modal.css` | one new size tier (`split`); everything else unchanged | split scroll layout (owned by ticket-viewer css) |
+Shared runtime artifacts are changed sequentially in TASK-11 -> TASK-12a -> TASK-12b -> TASK-13. Do not create competing main-navigation hooks or parallel pane-history arrays.
 
-Import direction: `SmartLink` owns the context module; `TicketViewer` imports and provides it. The generic component never imports the feature.
+## Source identity and project boundary
 
-## Canonical Flow — document link inside the ticket modal
+A document location includes its owning project, canonical relative file path, ticket owner when applicable, document kind, and anchor. A view-history entry also retains reading position. Resolve paths using the source document's project, never the main ticket's current project by convenience.
+Cache, titles, scroll keys, fetches, hand-off, HTML sandbox context and missing-target checks share this identity.
+On project transition: capture/save the old project's session; select the target project's session (or empty); invalidate old callbacks/requests before rendering target state. A pending old request may populate only its source-owned cache, never the new project's UI or snapshot.
+A same-project ticket link changes main only. References from another ticket remain identified by their actual ticket. Cross-project main navigation switches the session partition; it does not reinterpret the old history.
+Legacy project+ticket records are dropped/ignored. The new project-keyed store caps reference history at 50 entries per project, evicting oldest; no migration or path-owner reinterpretation is allowed.
 
-```text
-click on a.smart-link[data-link-type="document"] (rendered inside TicketViewer's MarkdownContent)
-→ SmartLink onClick: useDocumentDelivery() returns handler && normalizedLink.filePath && !documentMissing
-→ preventDefault; handler(filePath)                      // router navigation never fires
-→ useSidePane.openDocument(filePath): capture current pane scroll, truncate forward stack, push, visible=true
-→ TicketViewer re-renders: Modal size="split", body switches to .ticket-viewer-body--split
-→ scroll transfer effect: overlay scrollTop → ticket column scrollTop (pane open) / reverse (hide/close)
-→ TicketSidePane fetches /api/documents/content?projectId&filePath (authFetch; cached per path in the session)
-→ pane renders MarkdownContent (document prose variant, density + theme parity) or HtmlSandboxViewer for HTML
-```
+## Reported failure mechanism — source evidence
 
-Escape: `closeOnEscape = !isTraceGraphOpen && !paneVisible`; `useSidePane` binds its own document keydown (Escape → hide) while visible. The Modal's handler is inert whenever the pane is visible, so ordering is irrelevant; one Esc walks out exactly one layer (trace shell → pane → modal).
+- Host restoration exits while hasSidePaneSession or sessionOriginRef is set.
+- useSidePane histories/titles/scrolls carry bare paths with no source project.
+- TicketSidePane cacheRef is keyed only by currentPath.
+- Its default fetcher captures the current projectId; hand-off also uses the current route project.
+- Thus changing the route project can leave an old history paired with a new fetch context, consistent with the user's sf-api path shown under MDT. This is not yet a fresh browser reproduction.
+- The persistence helper's existing project+ticket tests pass; they do not exercise the host transition.
 
-## Program Design (contracts)
+## Reader composition and transitions
 
-```ts
-// SmartLink/documentDelivery.ts
-export interface DocumentDelivery { openDocument(filePath: string): void }
-export const DocumentDeliveryContext: React.Context<DocumentDelivery | null>
-export function useDocumentDelivery(): DocumentDelivery | null   // SmartLink consumes
+Shared header owns main identity/actions. Both toolbars are pinned below it. Bodies scroll independently; retain scroll on disclosure, split/frame/fullscreen changes. Existing split clamp, remembered percent and live <1100px overlay remain.
+The badge row uses a browser/device preference with safe fallback, not backend/project configuration. A repository main document hides ticket chrome without erasing the preference.
+Open beside is explicit picker intent and preserves main. Link semantics outside the viewer and ordinary ticket-key normalization remain unchanged.
+Promotion must commit the right document and its source/owner/metadata/selected path together, consume the reference slot, keep scroll and append a main-history location. Repository promotion uses the dedicated reader route and entry/back/close contract below. Preserve prior main location for Back; do not rebuild a discarded split automatically.
 
-// TicketViewer/useSidePane.ts
-interface SidePaneState { hist: string[]; hi: number; scrolls: Record<string, number>; visible: boolean }
-function useSidePane(): {
-  state;                                   // hist/hi/scrolls/visible
-  currentPath: string | null;
-  hasSession: boolean; paneVisible: boolean; canBack: boolean; canFwd: boolean;
-  openDocument(path: string): void;        // reveal + push (dedupe consecutive)
-  back(): void; fwd(): void;               // scroll applied by the pane via scrolls
-  hide(): void; reveal(): void;            // keep session
-  discard(): void;                         // session dies
-  captureScroll(top: number): void;        // called by the pane at navigation boundaries only
-}
+## Locked implementation decisions — user review follow-up
 
-// TicketViewer/TicketSidePane.tsx — presentational, props-driven (no session truth)
-<TicketSidePane projectId hist hi visible scrolls fetchContent? onBack onForward
-                onHide onDiscard onOpenInDocuments onScrollChange onTitleChange? />
-<SidePanePill title onReveal />            // ticket-column affordance
-```
+### Storage and history lifetime
 
-Least-confident decisions and what would invalidate them:
+- DROP legacy project+ticket snapshots. Do not migrate or reinterpret their paths. First r12 load with no new-format state starts every project's reference history empty.
+- Use a separate versioned, project-keyed browser store. Retain at most 50 reference entries per project, oldest first eviction; adjust the current index and prune evicted title/scroll/cache references consistently. Other projects are unaffected.
+- Main history is per viewer-open lifetime only, remains available through in-session ticket/repository promotion, and is cleared when the viewer closes. Fresh/reloaded reader entry has a single main location and disabled main Back. Reference sessions alone persist across viewer close; details disclosure is a separate device preference.
+- Slice order: TASK-11 -> TASK-12a -> TASK-12b -> TASK-13. Each has one editing owner and its own GREEN gate.
 
-1. **Scroll transfer via overlay↔column handoff** — evidence: MODALS.md documents the outer overlay as today's scroll container; the no-jump architecture is the hard constraint. Invalidated if the modal body ever becomes internal-scroll always; then the transfer collapses to nothing and C2 is satisfied structurally.
-2. **Session dies with the modal (no URL state)** — evidence: CR defers URL encoding; `#trace` shows hash-state deep links are the precedent when needed. Invalidated by a product ask for shareable ticket+doc links; then session moves to route state and Edge-5 changes meaning.
-3. **Per-path content cache in the pane component (ref map)** — evidence: documents are static enough within a session; SSE live-update for pane docs is out of scope. Invalidated by a need for live-updating pane docs; then cache moves behind a query hook with invalidation.
+### Repository promotion route — decision: dedicated reader route
 
-## Invariants
+Use `/prj/{sourceProject}/read?doc={encodedProjectRelativePath}`, built by the central route helpers. The doc value is the owning project's canonical relative file path, encoded once. Reuse existing project resolution, read authorization and path validation; invalid/missing/unreadable targets show the reader's recoverable error without retargeting another project.
 
-- `SmartLink` behavior with no provider is byte-identical to today (C6).
-- Flagged (known-missing) document links never deliver anywhere — they stay non-clickable (C7).
-- The pane never renders a ticket; the ticket column never renders a repo document (routing table, interactions.md).
-- The ticket column's scroll position survives pane open/hide/close exactly (C2); the modal's top-left anchor never moves (no-jump).
-- Esc never discards a session; only pane × or modal close does (interactions.md state machine).
-- The floating ToC and the modal close × stay scoped to the ticket column (spec Layout).
+| Entry/action | URL and result |
+| --- | --- |
+| Promote repository reference | Push the dedicated read URL, preserve the current viewer-open main stack/scroll, consume the active reference, show document-mode H1/path/copy/hand-off without ticket metadata |
+| Reader main Back in that open session | Restore the previous main location and its ticket/subdoc URL/scroll; do not resurrect the consumed reference |
+| Browser Back after promotion | Native preceding ticket URL returns; integrate with the same main-location authority without double-pushing another history entry |
+| Fresh direct link or reload | Reader opens document mode with this one main document, no active reference/pill and no restored main history; saved project reference records remain stored but are not auto-attached to this entry |
+| Close viewer in document mode | Replace the read URL with `/prj/{sourceProject}/documents?file={encodedProjectRelativePath}`; land on the existing Documents workspace with that file selected and avoid a Back bounce into the closed reader |
+| Open in Documents | Same explicit source-owned Documents destination |
+| Existing Documents URL | Continue opening the Documents workspace; never infer reader mode from an ordinary /documents?file= link |
 
-## Structure
+Choice rationale: current App.tsx/routes.ts already route /documents and /documents/* to the existing workspace, and buildDocumentPath is used for normal hand-off/link behavior. Reusing that exact URL for a reader would require invisible state to distinguish two surfaces or change established deep links (contrary to C6). A dedicated route makes the view explicit and shareable. State-only promotion is rejected because it leaves a stale ticket URL and cannot reload the document. Route constants/builders remain in routes.ts, the route table stays declarative in App.tsx, and lifecycle/navigation stays in the route owner and one reader controller.
 
-```text
-frontend/src/components/
-  SmartLink/
-    documentDelivery.ts        (new) context + hook
-    index.tsx                  (edit) DOCUMENT case: context-mediated delivery
-  TicketViewer/
-    useSidePane.ts             (new) session state machine
-    TicketSidePane.tsx         (new) pane + pill components
-    ticket-side-pane.css       (new) pane chrome, split columns, pill, overlay breakpoint
-    ticket-viewer.css          (edit) split body variant + scroll regions
-    index.tsx                  (edit) composition, modal gating, scroll transfer
-    TicketSidePane.test.tsx    (new) unit closure for C*/Edge-*
-  ui/
-    Modal.tsx                  (edit) add 'split' size key
-    modal.css                  (edit) .modal-content--split tier + width transition
-tests/e2e/
-  ticket/side-doc-pane.spec.ts (new, RED) TEST-side-doc-pane
-  utils/selectors.ts           (edit) sidePaneSelectors
-docs/design/surfaces/
-  ticket-side-doc.spec.md            (sync at UX gate)
-  ticket-side-doc.interactions.md    (sync at UX gate)
-```
+### Visual references
 
-## Tradeoffs and Alternatives
+Review images are optional local pre-development aids, excluded from Git. The picker image contains obsolete controls/order and header counts are illustrative. Implement the self-contained canonical specs/Wireloom contracts. Keep warnings while images are used locally; delete them after implementation and UAT are complete.
 
-- **Context seam vs custom event bus**: context is typed, provider-scoped, and testable; an event bus would let any surface deliver without opting in — precisely the C6 risk. Context wins.
-- **New `split` modal tier vs widening `xl`**: a new tier is additive and explicit; redefining `xl` would change every `xl` modal (settings, search) — rejected.
-- **Fetch-in-pane vs reusing MarkdownViewer wholesale**: MarkdownViewer carries ToC/frontmatter chrome the pane doesn't need; the pane reuses the endpoint and the prose pipeline instead. Small duplication of the fetch call, isolated behind the pane.
+## Preserved constraints
 
-## Error Philosophy
+- C3: one Escape layer per press, active portal menu/picker first, trace shell, visible reference hide, reader close. Restore is explicit and fullscreen is orthogonal.
+- C4/C5: existing markdown pipeline, density/theme, HTML sandbox, complementary reference landmark and announcements. Source context remains correct after promotion.
+- C6/C7: document delivery remains viewer-local; known-missing links remain inert.
+- Retain pane error boundary, stable toast API, cancellation of stale loads, graph #trace contract and epic board destination.
+- Reuse authFetch and current services; CLI/shared/backend business rules are not copied into the reader.
 
-- Pane fetch failure: inline error in the pane body, previous document retained, session intact (Edge-2). No toast, no modal-level disruption.
-- Delivery of a target that becomes invalid mid-session: the link renders flagged (existing SmartLink path, C7); the pane keeps its current document (Edge-6).
-- The pane never blocks the ticket column: pane errors are pane-local.
+## Source / verification anchors
 
-## Extension Rule
-
-When the URL-encoding question lands (shareable ticket + open doc), encode pane state as a reserved token alongside `#trace` in `frontend/src/routes.ts`; the session hook stays the single owner of pane truth, and the route only seeds/deserializes it. Multi-pane and gathered-Related remain rejected directions until evidence reopens them (`designs/ticket-side-doc/decisions.md`).
+TicketViewer/index.tsx; TicketSidePane.tsx and useSidePane.ts; config/sidePaneSessions.ts; CompactTicketHeader.tsx; tests/e2e/ticket/side-doc-pane.spec.ts; config/sidePaneSessions.test.ts.
+Canonical obligations and planned test paths are in architecture.trace.md/tests.trace.md. Existing runtime files are anchors, not evidence of r12 completion.

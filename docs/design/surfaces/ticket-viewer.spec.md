@@ -1,157 +1,100 @@
 # Ticket Viewer
 
-Modal overlay for viewing a ticket's full content, attributes, and sub-documents. Opens when a ticket card is clicked or a ticket URL is navigated to.
+A ticket/document reader for following references, comparing documents and returning to previous reading locations.
 
-The viewer also hosts the side reading pane for repo documents (MDT-248): composition, geometry, and states in `ticket-side-doc.spec.md`; state machine, link routing, and Esc chain in `ticket-side-doc.interactions.md`. With the pane closed, the viewer is exactly as specified below.
+**Design status:** MDT-248 UAT r12 approved target (2026-10-31); implementation and browser acceptance are pending. The source anchors below still contain the previous tabs, badge bar and ticket-only host. This is the canonical composition contract, not a statement that the target is shipped.
+
+Related artifacts:
+- [Main reader interactions](ticket-viewer.interactions.md)
+- [Review mockups](ticket-viewer.mockups.md)
+- [Reference pane](ticket-side-doc.spec.md) and [its interactions](ticket-side-doc.interactions.md)
+- [UAT brief](../../CRs/MDT-248/uat.md) and [ticket UX handoff](../../CRs/MDT-248/ux-design.md)
+
+## Owns
+
+- Shared reader header, main document toolbar and document-picker composition.
+- Device-wide ticket-details disclosure, fullscreen/Restore, main navigation and promotion presentation.
+- Orientation when main is a ticket document or a repository document.
+- Existing Trace Graph entry/shell and epic board action.
+
+## Does Not Own
+
+- Reference lifecycle/project partition: ticket-side-doc.interactions.md.
+- Markdown internals: markdown-content.spec.md. Documents workspace: documents-view-navigation.spec.md.
+- Global search, editing, board-order Previous/Next, arbitrary extra panes, or graph-dashboard internals.
+- Modal focus/portal/body-lock primitives: frontend/src/MODALS.md. The pinned single-reader/fullscreen composition is a proposed reader-specific extension to its current free-growing layout.
 
 ## Composition
 
 ```text
-Modal[size="xl"]
-├── TableOfContents (collapsible sidebar)
-├── button[close ×] (absolute, top-right)
-└── ModalBody[p-0]
-    ├── Ticket Not Found (error state)
-    │   ├── AlertTriangle icon
-    │   ├── h3["Ticket Not Found"]
-    │   └── p[error message]
-    └── div.viewer-content
-        ├── CompactTicketHeader
-        │   ├── div.title-bar (border-b)
-        │   │   ├── TicketCode
-        │   │   ├── span[• separator]
-        │   │   └── span[title]
-        │   └── div.badge-bar (border-b)
-        │       ├── StatusBadge
-        │       ├── PriorityBadge
-        │       ├── TypeBadge
-        │       ├── ContextBadge[phase] (conditional)
-        │       ├── ContextBadge[assignee] (conditional)
-        │       ├── ContextBadge[worktree] (conditional)
-        │       ├── RelationshipBadge[related] (conditional)
-        │       ├── RelationshipBadge[depends] (conditional)
-        │       └── RelationshipBadge[blocks] (conditional)
-        ├── EpicBoardAction (conditional: ticket is an epic, MDT-246)
-        │   └── button["Epics →"]
-        ├── TraceGraphAction (conditional: trace store exists)
-        │   └── button["Trace Graph"]
-        ├── TicketDocumentTabs (conditional: subdocuments exist)
-        │   └── Tabs.List × N rows
-        │       └── Tabs.Trigger × M entries
-        └── div.content-area
-            ├── div.subdoc-error (conditional)
-            ├── div.subdoc-loading (conditional overlay)
-            └── div.ticket-content
-                ├── RelativeTimestamp (absolute, top-right)
-                └── MarkdownContent
-        └── aside.ticket-side-pane (conditional: pane visible, MDT-248 — see ticket-side-doc.spec.md)
-        └── button.ticket-side-pane__pill (conditional: session exists AND pane hidden)
-
-TraceGraphShell (opened from TraceGraphAction)
-├── Modal[size="full", viewport variant]
-└── ModalBody[p-0]
-    └── div.trace-graph-shell
-        ├── button.trace-graph-shell__back["Back"]
-        └── iframe[trace dashboard HTML]
+Modal reader
+├── Pinned shared header
+│   ├── TicketCode template + H1 main ticket title OR H1 repository document title
+│   ├── Ticket-details disclosure (ticket mode only)
+│   └── Epic action when applicable, Trace when available, Fullscreen/Restore, Close viewer
+├── Optional expanded badge row
+└── Reading area
+    ├── Main pane
+    │   ├── Pinned toolbar: Back, Forward, document selector/title, Copy path, hand-off, Close left pane
+    │   ├── Searchable ticket-document picker (popover/sheet, when open)
+    │   ├── Document scroll region with timestamp/content/loading/error
+    │   └── Reveal pill (reference hidden)
+    ├── Divider (split only)
+    └── Reference pane (ticket-side-doc.spec.md)
+TraceGraphShell (existing isolated full-viewport tool)
 ```
 
-## Children
+## Header and identity
 
-| Child | Component | Spec | Conditional |
-|-------|-----------|------|-------------|
-| Modal | `frontend/src/components/ui/Modal.tsx` | `MODALS.md` | always |
-| TableOfContents | `frontend/src/components/shared/TableOfContents.tsx` | — | always (extracts from content) |
-| CompactTicketHeader | `frontend/src/components/TicketViewer/CompactTicketHeader.tsx` | — | when ticket exists |
-| TicketDocumentTabs | `frontend/src/components/TicketViewer/TicketDocumentTabs.tsx` | — | when `subdocuments.length > 0` |
-| MarkdownContent | `frontend/src/components/MarkdownContent/index.tsx` | `markdown-content.spec.md` | always (renders main or subdoc content) |
-| TraceGraphAction | colocated TicketViewer action | this file | when standard trace store metadata exists |
-| EpicBoardAction | `frontend/src/components/TicketViewer/EpicBoardAction.tsx` | this file | when `ticket.level === 'epic'` (MDT-246; journey contract in `epic-navigation.interactions.md`) |
-| TraceGraphShell | `frontend/src/components/TicketViewer/TraceGraphShell.tsx` | this file | when user opens trace graph |
-| TicketSidePane | proposed `frontend/src/components/TicketViewer/TicketSidePane/` | `ticket-side-doc.spec.md` | when a document link is followed (MDT-248) |
-| RelativeTimestamp | `frontend/src/components/shared/RelativeTimestamp.tsx` | — | in content area |
-| StatusBadge | `frontend/src/components/Badge/StatusBadge.tsx` | — | always in header |
-| PriorityBadge | `frontend/src/components/Badge/PriorityBadge.tsx` | — | always in header |
-| TypeBadge | `frontend/src/components/Badge/TypeBadge.tsx` | — | always in header |
+- Header spans the whole reader and follows the main document. Desktop target height 48px; 32px chrome buttons with 20px glyphs.
+- One H1 uses the existing modal headline pattern. Ticket identity is TicketCode + separator + title; preserve configured type/epic/worktree rules.
+- Priority stays immediately before the ticket key. Do not move it into the trailing metadata control. Do not repeat the main key in its document toolbar.
+- Title yields space through truncation before controls disappear. Full title remains accessible through its complete accessible name and tooltip.
+- Trailing order: ticket-details disclosure, epic board action if applicable, Trace Graph if available, Fullscreen/Restore, Close viewer.
+- Ticket-details is a single recognizably clickable control containing compact current-ticket metadata glyphs and a chevron. Neutral hover/focus, selected tint/up-chevron while expanded. Accessible name Show ticket details or Hide ticket details; aria-expanded and aria-controls.
+- Hover/focus shows a tooltip only. Click/Enter/Space toggles the in-flow badge row beneath the title; there is no hover badge dropdown.
+- Disclosure is one browser/device-wide preference across projects, tickets, promotion and reopen. Default collapsed; unavailable/corrupt storage falls back safely without disabling in-memory operation. Repository mode hides the control/row without resetting this preference.
+- Badge row starts at 36px and wraps. It uses existing badge components/order: status, priority, type subject to TicketCode type suppression, phase, assignee, worktree, related, depends, blocks, external refs. Existing external-ref grouping/+N/unavailable states remain. Board badge filters do not remove viewer metadata.
+- Expanded details and header resizing preserve the reading positions beneath pinned chrome.
 
-## Source files
+### Ticket actions
 
-| Type | Path |
-|------|------|
-| Viewer | `frontend/src/components/TicketViewer/index.tsx` |
-| Header | `frontend/src/components/TicketViewer/CompactTicketHeader.tsx` |
-| Doc tabs | `frontend/src/components/TicketViewer/TicketDocumentTabs.tsx` |
-| Trace graph shell | `frontend/src/components/TicketViewer/TraceGraphShell.tsx` |
-| Trace graph availability hook | `frontend/src/components/TicketViewer/useTraceStoreAvailability.ts` |
-| Trace graph URL hash token | `frontend/src/routes.ts` (`TRACE_GRAPH_HASH`, `isTraceGraphHash`) |
-| Navigation hook | `frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts` |
-| Content hook | `frontend/src/components/TicketViewer/useTicketDocumentContent.ts` |
-| Realtime hook | `frontend/src/components/TicketViewer/useTicketDocumentRealtime.ts` |
-| Subdoc path | `frontend/src/components/TicketViewer/subdocumentPath.ts` |
+- Trace Graph is an icon button, accessible name/tooltip Trace Graph; hidden when the main ticket has no standard store. It always targets the main ticket, never the reference's owner.
+- Epic navigation retains the label Epics →, rows-3/arrow action vocabulary, accessible name Show {KEY} on Epics board, and destination /prj/:code/epics?epic=KEY. It leaves the reader in one navigation as specified by epic-navigation.interactions.md.
+- Repository main mode has document title/source/copy/hand-off and global controls; no ticket key, priority, details, epic or Trace action.
 
-## Layout
+## Main toolbar and document discovery
 
-### Modal
+- Toolbar target height 52px, aligned with the reference toolbar when split. Order: Back, Forward, selected document title/chevron, flexible space, Copy path, repository hand-off when applicable, Close left pane when split.
+- Main history lasts only for the current viewer-open lifetime and clears on close; only reference sessions persist across viewer close. Back/Forward mean visited locations in this pane, not adjacent board tickets. Show disabled bounds with explanatory tooltips; retain existing right-click jump-menu behavior for reference history.
+- Selected ticket-document title is the picker trigger, replacing both horizontal tabs and a separate Documents button. Even a ticket with only Main retains history/copy; its picker includes Main.
+- Picker is a searchable, scrollable tree scoped to that pane's document-owning ticket. Include Main, preserve nested folders and distinguish full paths.
+- Folder activation expands/collapses in the picker; it does not add another toolbar row.
+- Selecting a document name navigates that pane. A separate split-icon action Open {document} beside opens it on the right without changing main. Always reachable on focus/touch; selected rows retain the action; pointer hover may reveal it for other rows.
+- Show Main pane/Beside markers only for matching full source identity. Search uses names and relative paths while retaining useful ancestry; no matches shows No matching documents with Clear search.
+- Opening beside replaces the single reference, adds reference history, and deduplicates consecutive same-document opens. A picker on the reference remains scoped to its owner after main changes; there is no third pane.
+- Repository documents have no ticket-picker chevron. Keep Open in Documents as the explicit full-workspace hand-off.
+- Copy path exists for both panes and uses the actual displayed file's resolved project-relative path, including the main ticket file. Preserve the copied-check/toast feedback; never reconstruct a filename from a key.
 
-- Size: `xl` (wider than default); widened split variant while the side pane is visible — geometry owned by `ticket-side-doc.spec.md`
-- Backdrop: `bg-black/50 backdrop-blur-sm` per `MODALS.md`
-- z-index: `z-50`
-- Close button: `absolute right-3 top-3 z-20`, 8×8 rounded button, × icon 5×5
-- While the side pane is visible, each column scrolls internally; the floating ToC and close button stay scoped to the ticket column (`ticket-side-doc.spec.md` → Layout)
+## Framed, split and fullscreen layouts
 
-### CompactTicketHeader
+- Use the base Modal and its existing dim/blur, focus trapping and body lock.
+- Framed single width uses xl; split uses min(94vw,1560px). Shared header and pane toolbars stay pinned in both modes; document bodies scroll internally. This replaces the previous free-growing ticket-modal/tab-only sticky behavior.
+- Fullscreen fills the app viewport without card margins. Restore returns to the prior frame and split preference. Both document locations, histories and scroll offsets survive. Browser Fullscreen API is not required; fullscreen is independent of the Trace shell.
+- Split geometry and project-owned reference state belong to ticket-side-doc.spec.md. Neither column drops below 340px; retain remembered divider position and keyboard resize/reset.
+- The Table of Contents stays associated with main content and never overlaps reference chrome. A hidden-reference pill remains reachable above ToC.
+- Prose retains existing density/theme, document-source resolution, markdown pipeline and sandboxed HTML behavior. Wide tables scroll within the pane; a separate table inspection/expansion feature is not committed by r12.
+- Timestamp stays above/beside content without covering a heading. Fetch failures show the existing inline error/loading treatment. Deleted main subdocs fall back to Main; removal of a reference target retains the error/session contract.
 
-Two horizontal bars, both with bottom border:
+## Promotion and source ownership
 
-1. **Title bar** (`px-4 py-3 pr-14` to clear close button)
-   - `h1 text-base font-semibold leading-6`
-   - TicketCode in primary color, bullet separator, title text
-   - `min-w-0` for truncation, `break-words` for long titles
+| Reference document | Result of Close left pane |
+| --- | --- |
+| Same ticket | Its selected document fills main; ticket identity stays |
+| Other ticket | Its selected document fills main; header, priority, badges and actions switch atomically to that owner |
+| Repository document | Full-width document mode with its title/path/copy/hand-off; no old ticket chrome |
 
-2. **Badge bar** (`px-4 py-2.5`)
-   - `flex flex-wrap items-center gap-2`
-   - Same badge order as TicketCard, plus:
-     - **ContextBadge[assignee]** — when `ticket.assignee` is set
-   - Badges wrap to next line if they overflow
-
-3. **Trace graph action** (conditional)
-   - Appears only when the standard trace store exists for the ticket.
-   - Uses a small secondary button, not a badge. Badges describe ticket metadata; this is an action.
-   - Preferred placement: end of the badge bar after a flexible spacer on desktop. On narrow widths it wraps onto its own line below badges.
-   - Label: `Trace Graph`.
-   - Icon: use a Lucide graph/network-style icon if one is already available in the app bundle.
-   - Hidden entirely when no trace store is present. Do not show a disabled button for the absent state.
-
-4. **Epic board action** (conditional, MDT-246)
-   - Appears only when `ticket.level === 'epic'` — epic tickets carry no phase badge, so this is the epic's own way out to its board lane.
-   - Same 32px chrome-control recipe and placement cluster as the trace graph action (end of badge bar after the flex spacer; wraps on narrow widths).
-   - Label: `Epics →`. Leading icon: `rows-3` — the same glyph the view switcher uses for the Epics toggle (one destination vocabulary; never the Zap identity glyph). Trailing `arrow-right` is the go-verb: this control leaves the modal (no back), unlike Trace's in-place overlay.
-   - Accessible name / tooltip: the full sentence `Show {KEY} on Epics board` — Label-in-Name holds (visible "Epics" ⊂ accessible name).
-   - One navigation: closes the modal and lands on `/prj/:code/epics?epic={KEY}`. Arrival behavior is owned by `epic-navigation.interactions.md`.
-   - Rendering order: before the Trace Graph action (nearest the badges).
-
-### TicketDocumentTabs
-
-- Sticky: `sticky top-0 z-10`
-- Background: `bg-background/50 backdrop-blur-sm`
-- Hidden when no sub-documents exist
-- Tab rows: one row per folder depth level
-- Tab trigger: `px-2 py-1.5 text-sm font-medium`, whitespace-nowrap
-- Active tab: `border-b-2 border-primary`
-- Folder entries: append ` ▶` indicator
-- Overflow: `overflow-x-auto scrollbar-hide`
-
-### Content area
-
-- Padding: `px-4 py-4 sm:px-5`
-- RelativeTimestamp: `absolute right-4 top-4 z-[1] sm:right-5`
-- MarkdownContent: receives `headerLevelStart={3}` (renders H1 as H3)
-- MarkdownContent: receives `sourcePath="{ticketCode}.md"` for the main document.
-- MarkdownContent: receives the selected `SubDocument.filePath` for sub-documents. The viewer must not reconstruct this value from the selected URL/API path.
-- MarkdownContent uses the `ticket` typography variant from `markdown-content.spec.md`.
-- Ticket prose keeps compact rhythm: moderate section gaps, readable paragraphs, styled task lists, and scrollable artifacts.
-- Timestamp placement must not overlap the first rendered heading or first paragraph.
-- Subdoc loading overlay: `absolute inset-0 z-10`, `bg-background/50`, pulsing "Loading…" text
-- Subdoc error: inline text, `text-destructive`, `role="alert"`
+Close left pane is distinct from global Close viewer and reference Close. Tooltip: Close left pane; keep right document. It appears only while split. Promotion preserves source and scroll, consumes the reference slot/pill, and adds a main-history location. Main Back restores the previous main location without rebuilding a discarded split. Repository promotion uses /prj/{sourceProject}/read?doc={encodedProjectRelativePath}. Promotion pushes this route; in-session browser Back returns to the preceding ticket URL. Direct/reloaded entry opens one repository main document with no active reference/pill and no restored main history. Close viewer replaces this URL with the source /documents?file= URL. Existing Documents links retain their workspace behavior; rationale is in MDT-248 architecture.md.
 
 ### TraceGraphShell
 
@@ -177,142 +120,57 @@ Two horizontal bars, both with bottom border:
 - No ticket document tabs, ticket content, or TableOfContents are visible while the trace shell is open.
 - This spec intentionally does not define the graph board internals. The dashboard HTML remains the owner of graph layout, filters, cards, edges, and graph-specific controls.
 
-## States
 
-| State | Trigger | Visual Change |
-|-------|---------|---------------|
-| default | ticket opened | modal with header, content, optional tabs |
-| loading content | ticket has no content yet | fetch triggered, content loads asynchronously |
-| loading subdoc | switching sub-document tab | overlay with "Loading…" pulse, content at `opacity-50 pointer-events-none` |
-| subdoc error | subdoc fetch fails | inline error text in content area |
-| ticket not found | URL points to missing ticket | centered: AlertTriangle icon, "Ticket Not Found" title, error message |
-| real-time update | SSE ticket:updated event | refetches full ticket, merges into current state |
-| subdoc added | SSE subdocument add event | refetches ticket to refresh tabs |
-| subdoc removed | SSE subdocument unlink event | if viewing removed doc → switch to main, refetch ticket |
-| trace store present | standard trace store metadata exists | `Trace Graph` action appears in header action area |
-| trace store absent | metadata endpoint reports no store | no graph action is rendered |
-| epic ticket | `ticket.level === 'epic'` | `Epics →` action appears in the header action area (before `Trace Graph`) |
-| epic board jump | user clicks `Epics →` | single navigation to `/prj/:code/epics?epic={KEY}`; the viewer modal closes with it |
-| trace graph open | user clicks `Trace Graph` | full-screen TraceGraphShell replaces ticket content visually; ticket viewer remains the return context; `#trace` appended to URL |
-| trace graph open via deep link | URL carries `#trace` on load | shell opens immediately once the ticket modal opens; `#trace` preserved through the async ticket fetch |
-| trace graph loading | iframe is mounting or dashboard fetches store | floating Back remains visible; iframe may show dashboard-owned loading |
-| trace graph unavailable after click | store disappears or fetch fails | floating Back remains visible; show compact shell-owned error in the viewport |
-| side pane open | document link followed (MDT-248) | modal widens; pane beside ticket column; full state machine in `ticket-side-doc.interactions.md` |
-| side pane hidden | Esc while pane visible | pane tucked; session pill appears bottom-right of ticket column |
+## States and verification expectations
 
-## Trace Graph Entry
+| State | Trigger | Visible result |
+| --- | --- | --- |
+| Single ticket | Ticket opens | Shared ticket header, toolbar, content; saved details state |
+| Picker open | Document title activated | Search/tree and explicit Open beside actions |
+| Split | Open beside/reference link | Two aligned toolbars and independent bodies |
+| Reference hidden | Escape/Return to main | Single main with source-naming reveal pill |
+| Details expanded | Disclosure activated | Badge flow below title; reader position retained |
+| Project change | Navigate to a different project | Only that project's reference session is active |
+| Promoted ticket/repository | Close left pane | One main document with its own source-specific header |
+| Fullscreen | Fullscreen activated | Viewport reader; Restore available |
+| Loading/error | Document fetch pending/fails | Existing content retention/inline error semantics |
+| Missing ticket | Invalid ticket destination | Ticket Not Found; Close and return remain usable |
+| Live update/removal | SSE changes current file | Refresh content/tree or fall back to Main without corrupting other history |
 
-The trace graph entry is ticket-scoped. The frontend passes only the project code and ticket code. It must not pass filesystem paths or long store URLs through the UI.
+New-state verification is pending. Existing unit/E2E anchors prove only their recorded baseline; see the current UAT tests plan.
 
-```text
-Standard store path:
-{ticketsDir}/.trace/{ticketCode}/store.json
-```
+## Entry points and discovery
 
-Availability is checked before rendering the action. The user-facing model is "this ticket has a trace graph", not "choose a store file".
+Returning-user walkthrough (design reasoning, not browser evidence): the selected document title/chevron occupies the former pinned-tab location; opening it exposes the full tree and search. A selected row's persistent split action exposes comparison. The outlined details control restores badges even when the device preference begins collapsed. Both pane histories remain visible while scrolling. Clear source labels prevent a surviving reference being mistaken for the new main ticket.
 
-## Badge Display Order (Header)
+## Responsive and accessibility
 
-The header badge bar shows more badges than the card:
+- >=1100px: split toolbars below the shared header. <1100px: full-cover reference with Return to main and Use as main; exact controls/lifecycle in ticket-side-doc.spec.md.
+- <640px: ticket picker is a sheet. Title truncates, icon controls keep full accessible names and visible focus. The expanded badge flow may wrap; it never becomes a hidden horizontal menu.
+- One active overlay consumes Escape at a time; details are changed through the disclosure, not Escape.
+- Reuse ModalCloseButton styles with distinct names Close viewer, Close left pane and Close right pane. Only global Close remains when a single document is shown.
+- Preserve keyboard tree navigation, named pane/history controls, focus restoration to picker triggers, and source announcements on navigation/promotion.
+- Main content, timestamps, ToC and live SSE handling keep their existing owners; no polling or duplicate parser is introduced.
 
-1. **StatusBadge** — always
-2. **PriorityBadge** — always
-3. **TypeBadge** — always
-4. **ContextBadge[phase]** — when `ticket.phaseEpic` is set
-5. **ContextBadge[assignee]** — when `ticket.assignee` is set (card does NOT show this)
-6. **ContextBadge[worktree]** — when `ticket.inWorktree === true`
-7. **RelationshipBadge[related]** — when `ticket.relatedTickets` has items
-8. **RelationshipBadge[depends]** — when `ticket.dependsOn` has items
-9. **RelationshipBadge[blocks]** — when `ticket.blocks` has items
+## Semantic style anchors
 
-## Sub-Document Navigation
+| Element | Existing anchor | Contract |
+| --- | --- | --- |
+| Header/title | .modal__headline; --foreground | Main identity, not repeated in left toolbar |
+| Disclosure | --state-hover-bg; --state-active-bg/fg; --ring | Neutral hover, selected expanded state, keyboard focus |
+| Key/priority | TicketCode/PriorityIcon template | Stable priority-before-key |
+| Badges | .badge[data-*] | Existing meanings, order and grouping |
+| Reader chrome | .modal__close; existing 32px/20px controls | Shared styling, distinct scope labels |
+| Pane content | .prose--ticket / .prose--document | Existing rendering/density parity |
+| Paths/separators | --muted-foreground; --border | Secondary source identity and simple divisions |
 
-Managed by `useTicketDocumentNavigation`:
+## Source / verification anchors
 
-- **Main document**: `selectedPath = 'main'`
-- **Sub-documents**: `selectedPath` matches file path
-- **Folders**: clicking a folder pushes to `folderStack`, revealing children in a new tab row
-- **Tab rows**: one Radix `Tabs.Root` per active folder level
-- **Pending path**: when switching subdocs, a pending path is set. Content hook loads it, then calls `confirmPathSwitch`
-
-## Table of Contents
-
-Extracted from the currently displayed content (main or subdoc):
-
-- Source: `extractTableOfContents(content, maxLevel=3)` — captures H2 and H3
-- Rendered by `TableOfContents` component with `view="ticket"`
-- Collapsed/expanded state persisted per view via `config/tocConfig.ts`
-
-## Real-Time Updates
-
-Three SSE event types handled:
-
-| Event | Action |
-|-------|--------|
-| `ticket:updated` | Refetch full ticket, merge into current state |
-| `ticket:subdocument:changed` | Invalidate cache and refetch the viewed subdoc |
-| `ticket:subdocument:added` | Refetch ticket to refresh tabs list |
-| `ticket:subdocument:unlinked` | If viewing the removed doc, switch to main. Refetch ticket. |
-
-## Responsive
-
-TraceGraphShell uses the full available viewport at all breakpoints:
-
-| Breakpoint | Change |
-|------------|--------|
-| < 640px | Floating Back stays top-left; iframe remains full-width |
-| 640-1024px | Same full-screen shell; dashboard iframe owns internal responsive behavior |
-| > 1024px | Same full-screen shell; dashboard iframe owns internal responsive behavior |
-
-## Tokens used
-
-| Element | Token | Usage |
-|---------|-------|-------|
-| background | `--background` | modal body |
-| border | `--border` | header separators, tab borders |
-| primary | `--primary` | ticket code, active tab indicator, focus rings |
-| foreground | `--foreground` | title text |
-| muted-foreground | `--muted-foreground` | close button, timestamps, loading text |
-| destructive | `--destructive` | subdoc error text |
-| trace action | `--primary`, `--border` | secondary action focus, border, active treatment |
-| trace back control | `--background`, `--border`, `--foreground` | floating translucent Back control |
-| badge colors | `badge.css` data attributes | all badge variants |
-| markdown prose | `--foreground`, `--muted-foreground`, `--primary`, `--border`, `--code-*` | ticket body typography, links, tables, code |
-
-## Classes used
-
-| Element | Class | Source |
-|---------|-------|--------|
-| modal | `.modal` | `MODALS.md` |
-| badge | `.badge[data-status="..."]` | `badge.css` |
-| markdown prose | `.prose.prose--ticket` proposed | `markdown-content.spec.md` |
-| tabs | `.ticket-document-tabs` | inline Tailwind |
-| tab trigger | Radix `data-[state=active]` | inline Tailwind |
-| trace shell | `.trace-graph-shell` | TicketViewer colocated CSS |
-| trace back control | `.trace-graph-shell__back` | floating overlay control |
-| trace action | small secondary button class or inline Tailwind | `STYLING.md` inline-first rule |
-
-## Modal / Overlay Compliance
-
-TraceGraphShell uses the standard `Modal` Pattern B from `frontend/src/MODALS.md`, with one proposed extension: a full-viewport modal content variant for iframe-heavy tools. The existing `size="full"` width cap is not enough by itself because the graph dashboard needs the full viewport, no rounded card impression, and stable height.
-
-Proposed viewport variant:
-
-- modal content fills `100dvw × 100dvh`
-- no outer padding or margin
-- no rounded corners
-- no modal card shadow
-- `ModalBody` is `p-0`
-- floating Back uses top-left absolute positioning, translucent background, no blur, and focus ring
-- iframe area fills the viewport with no extra padding
-
-## Extension notes
-
-- Header badges differ from card badges: the header adds `assignee`. If badge display needs to be consistent, `CompactTicketHeader` and `TicketAttributeTags` should share a badge order config.
-- Content processing: `processContentForDisplay()` removes H1 headers before rendering. `headerLevelStart={3}` shifts remaining headers down.
-- The viewer fetches full ticket content on open if `ticket.content` is missing (shallow list ticket vs. full API ticket).
-- Sub-document navigation path derivation is handled by `subdocumentPath.ts`.
-- Sub-document markdown source context is resolved by TicketViewer from the selected `SubDocument.filePath`, then passed to `MarkdownContent.sourcePath`.
-- Close button position (`right-3 top-3`) must account for ToC toggle if one is added in the future.
-- Trace graph store path resolution is handled by the backend from project config and ticket code. The frontend never constructs filesystem paths.
-- The graph dashboard HTML remains a static, isolated graph reader. TicketViewer owns only the entry point and return shell.
+| Anchor | Path | Scope |
+| --- | --- | --- |
+| Host | frontend/src/components/TicketViewer/index.tsx | Main context, modal, reference, scroll |
+| Header | frontend/src/components/TicketViewer/CompactTicketHeader.tsx | Current header starting point |
+| Document navigation | frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts | Current path authority; picker replaces tab presentation |
+| Reference | frontend/src/components/TicketViewer/TicketSidePane.tsx | Source, copy, history and rendering |
+| Behavioral contract | docs/CRs/MDT-248/requirements.trace.md | Approved canonical requirement identities |
+| Verification | tests/e2e/ticket/side-doc-pane.spec.ts | Baseline and planned r12 journeys; no new-pass claim |

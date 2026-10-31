@@ -1,152 +1,159 @@
-# Ticket Side Doc — Wireframe Schema
+# Ticket Side Doc — Mockups
 
-Related spec: `ticket-side-doc.spec.md`
-Related interactions: `ticket-side-doc.interactions.md`
-Related ticket: `docs/CRs/MDT-248-ticket-side-doc.md`
+Related: [spec](ticket-side-doc.spec.md), [interactions](ticket-side-doc.interactions.md), [shared shell](ticket-viewer.mockups.md).
+**MDT-248 UAT r12 target; implementation and browser acceptance pending.** These states replace the earlier tabs/floating-history mockups.
 
-The closed state is today's ticket viewer unchanged — see `ticket-viewer.mockups.md` (no duplicated shell). These mockups cover the pane states only.
-
-## Open — Document Beside Ticket
+## Same-ticket comparison — collapsed details
 
 ```wireloom
-window "Ticket Viewer — Side Reading Pane Open":
-  panel:
-    row id="tsd-split":
-      col 340:
-        row:
-          text "MDT-248 • Open documents beside ticket" bold id="tsd-title"
-          spacer
-          button "×" id="tsd-close"
-        divider
-        row:
-          chip "Proposed" id="tsd-status"
-          chip "Medium" id="tsd-priority"
-          chip "Feature" id="tsd-type"
-        divider
-        tabs id="tsd-tabs":
-          tab "Main" active id="tsd-tab-main"
-          tab "Requirements" id="tsd-tab-req"
-        text "### Problem" bold id="tsd-h3"
-        text "Following a document link leaves the ticket behind..." muted
-        text "Architecture index: designs/ticket-side-doc" id="tsd-doclink"
-        text "Decisions live in decisions.md" id="tsd-doclink2"
-      col fill:
-        row:
-          text "Cloud sync — map" bold id="tsd-doc-title"
-          spacer
-          text "docs/architecture/cloud-sync/README.md" muted size=small id="tsd-doc-path"
-          button "⧉" id="tsd-copy"
-          button "↗" id="tsd-handoff"
-          button "×" id="tsd-pane-close"
-        divider
-        row:
-          button "◀" id="tsd-back"
-          button "▶" id="tsd-fwd"
-        text "### Cloud sync architecture" bold
-        text "Index of the durable cloud-sync documentation set." muted
-        text "• Data & consistency — journal, outcomes" muted
-        text "• Identity & access — credentials" muted id="tsd-inner-link"
-
-annotation "Modal widened (cap min(94vw, 1560px)); only the right edge grows —\nticket column keeps its measure, clamp(420px, 46%, 640px).\n1px --border divider between columns." target="tsd-split" position=top
-annotation "Ticket column = today's viewer, byte-for-byte:\nheader, badge bar, subdoc tabs, prose, floating ToC.\nDocument links in this prose open the pane." target="tsd-doclink" position=left
-annotation "Single-row head block: title leading; mono path (capped at 40%\nof the row) with the shared copy control beside it; then the 32px\nactions — hand-off + × discards the session." target="tsd-doc-title" position=top
-annotation "History is not header chrome: back/forward float as a pill chip\nover the pane body's top-left (--bg-elevated 85% + backdrop blur,\n--radius-pill) — half transparent at rest, opaque on hover/focus;\ncontent scrolls under it. Disabled = cursor-not-allowed." target="tsd-back" position=top
-annotation "Copy path: shared documents-view control; toast + copied-check\nfeedback. Always visible here (inline micro size)." target="tsd-copy" position=right
-annotation "Hand-off: lands on this document in the Documents view.\nThe only path from the pane to the full workspace." target="tsd-handoff" position=right
-annotation "Links inside pane docs open in the same pane (never a new\nsurface, never the ticket column) — recursion stays here." target="tsd-inner-link" position=right
-annotation "Pane body renders the documents prose variant;\ndensity + theme settings apply identically to ticket prose." target="tsd-doc-path" position=right
-```
-
-## Open — Two Documents Deep (History)
-
-```wireloom
-window "Ticket Viewer — Pane History":
-  panel:
+window "Reader — same-ticket documents":
+  header:
     row:
-      col 340:
-        row:
-          text "MDT-248 • Open documents beside ticket" bold id="tsdh-title"
-          spacer
-          button "×"
-        divider
-        tabs:
-          tab "Main" active
-        text "### Problem" bold
-        text "Ticket column scroll position unchanged..." muted
-      col fill:
-        row:
-          text "Data & consistency" bold id="tsdh-doc-title"
-          spacer
-          button "↗"
-          button "×"
-        divider
-        row:
-          button "◀" id="tsdh-back"
-          button "▶" id="tsdh-fwd"
-        text "### Data & consistency" bold
-        text "The journal uses explicit outcomes..." muted
-        text "See identity for token lifetimes." muted id="tsdh-inner"
-
-annotation "Back is enabled: history = [README, data-and-consistency].\nBack/forward restore per-entry scroll positions; the chip floats\nover the pane body like in the open frame." target="tsdh-back" position=top
-annotation "Same pane, second document — the ticket column did not\nmove, and the subdoc tab selection is untouched." target="tsdh-doc-title" position=top
-```
-
-## Hidden — Session Pill
-
-```wireloom
-window "Ticket Viewer — Pane Hidden":
-  panel:
-    row:
-      text "MDT-248 • Open documents beside ticket" bold id="tsdp-title"
+      text "= ABC-003 • Add public website global search for JRP-95" bold
       spacer
-      button "×" id="tsdp-close"
+      button "Show ticket details"
+      button "Trace Graph" icon="tech"
+      button "Restore"
+      button "Close viewer"
+  panel:
+    row:
+      col 520:
+        row:
+          button "Back"
+          button "Forward" disabled
+          button "Implementation ▾"
+          spacer
+          button "Copy path"
+          button "Close left pane"
+        divider
+        text "Implementation" bold
+        text "Reuse the existing search service."
+      col fill:
+        row:
+          button "Back"
+          button "Forward" disabled
+          col fill:
+            button "Acceptance matrix ▾"
+            text "ABC-003 / acceptance-matrix" muted size=small
+          button "Copy path"
+          button "Close right pane"
+        divider
+        text "Acceptance matrix" bold
+        text "Exact match — matching public results are returned."
+```
+
+Shared header spans both panes; toolbars align below it. Neither pane repeats a full ticket header. Both own navigation/copy controls; runtime has icon-only close controls with distinct labels. Global Close closes the viewer, reference Close discards it, and Close left pane promotes the reference. Column width in this drawing is structural, not the runtime persisted ratio.
+
+## Different-ticket reference — reference header fragment
+
+```wireloom
+window "Reference — another ticket":
+  panel:
+    row:
+      button "Back"
+      button "Forward"
+      col fill:
+        button "Architecture ▾"
+        text "ABC-008 / architecture" muted size=small
+      button "Copy path"
+      button "Close right pane"
     divider
-    tabs:
-      tab "Main" active
-    text "### Problem" bold
-    text "Working through the ticket body..." muted
-    text "More prose fills the column." muted
+    text "Architecture" bold
+    text "The index contains only public content."
+```
+
+Use the shared ABC-003 main header from the preceding state. Reference remains explicitly owned by ABC-008, even after main navigation. Its selector browses ABC-008's documents. Promotion adopts ABC-008's header/metadata as drawn in ticket-viewer.mockups.md.
+
+## Repository reference — reference header fragment
+
+```wireloom
+window "Reference — repository document":
+  panel:
+    row:
+      button "Back"
+      button "Forward" disabled
+      col fill:
+        text "Public website search" bold
+        text "sf-api/docs/prd/cms/public-search.md" muted size=small
+      button "Copy path"
+      button "Open in Documents"
+      button "Close right pane"
+    divider
+    text "Search API" bold
+    text "The response contains grouped public results."
+```
+
+No ticket-picker chevron or ticket badges. Full source project/path remains available after truncation. Copy, hand-off, links, cache and fetch resolve against this document's source. Switching main projects selects that project's separate reference session; it does not load this path under the new project.
+
+## Reference history — jump menu fragment
+
+```wireloom
+window "Reference — history":
+  panel:
+    row:
+      button "Back"
+      button "Forward"
+      col fill:
+        text "Public website search" bold
+        text "sf-api/docs/prd/cms/public-search.md" muted size=small
+      button "Copy path"
+      button "Close right pane"
+    menu "Back history":
+      menuitem "Public search architecture — sf-api/docs/architecture/public-search.md"
+      menuitem "Search overview — sf-api/docs/prd/cms/overview.md"
+```
+
+Back/Forward is pinned toolbar chrome, not a floating chip over content. Existing right-click jump menus keep the history stack intact and restore per-entry scroll; dismissing the menu does not close the reader. Project qualification prevents equal-path collisions.
+
+## Hidden reference — reveal affordance fragment
+
+```wireloom
+window "Reader — reference tucked":
+  panel:
+    text "Implementation" bold
+    text "Reuse the existing search service."
     row justify=end:
-      button "▤ Reading · Data & consistency · show ›" id="tsdp-pill"
-
-annotation "Esc tucked the pane: modal back to single column,\nno width change felt in the ticket column.\nSession (doc + history + scroll) kept." target="tsdp-pill" position=top
-annotation "Pill floats bottom-right of the ticket column content.\nOne button; accessible name 'Show Data & consistency side pane'.\nClick → pane re-reveals on the same doc, scroll restored.\nVisible ONLY while a session exists and the pane is hidden." target="tsdp-pill" position=bottom
+      button "Reading · ABC-008 / Architecture · Show"
 ```
 
-## Narrow Viewport — Overlay Variant
+Compose with the single main shell. Escape/Return to main preserved the active project's session. Pill sits above prose/ToC and names the kept source. It is absent after reference discard or successful promotion.
+
+## Narrow reference overlay
 
 ```wireloom
-window "Ticket Viewer — Pane Overlay (narrow)":
+window "Reader — narrow reference":
   panel:
     row:
-      button "‹ Ticket" id="tsdo-back"
-      text "Cloud sync — map" bold id="tsdo-title"
+      button "Return to main"
       spacer
-      button "↗" id="tsdo-handoff"
-      button "×" id="tsdo-close"
-    divider
+      button "Use as main"
+      button "Close right pane"
     row:
-      button "◀" id="tsdo-hist-back"
-      button "▶" id="tsdo-hist-fwd"
-    text "### Cloud sync architecture" bold
-    text "Index of the durable cloud-sync documentation set." muted
-    text "• Data & consistency — journal, outcomes" muted
-    text "• Identity & access — credentials" muted
-
-annotation "Below 1100px the pane covers the modal (single column).\n'‹ Ticket' returns to the ticket — same effect as Esc (hide, session kept).\nThe path cluster yields its space to the title; history still floats\nas the usual chip over the body." target="tsdo-back" position=bottom
-annotation "Ticket column, pill, and session all survive the breakpoint\ncrossing in either direction (live resize, no reload)." target="tsdo-title" position=top
+      button "Back"
+      button "Forward" disabled
+      col fill:
+        button "Architecture ▾"
+        text "ABC-008 / architecture" muted size=small
+      button "Copy path"
+    divider
+    text "Architecture" bold
+    text "The index contains only public content."
 ```
 
-## Annotations
+Below 1100px the reference covers main; the covered main/global close is hidden so the reference surface has one close. Return to main hides without discarding; Use as main promotes the document because the left close is unreachable. History/copy remain accessible. At <640px its document picker uses the same sheet pattern as main. This narrower toolbar arrangement is a breakpoint-specific state, not the desktop row-height contract.
 
-| Element | Token | Class | Notes |
-|---------|-------|-------|-------|
-| Pane surface | `--background` | `.ticket-side-pane` proposed | matches ticket column surface; divider separates |
-| Divider | `--border` | — | 1px column separator |
-| Pane header buttons | `--state-hover-bg` (hover) | 8×8 chrome recipe | disabled history: `cursor-not-allowed`, tooltip survives |
-| Doc title / path | `--foreground` / `--muted-foreground` | mono path | path truncated (≤40% of the row), full value in `title`; copy control beside it |
-| Floating history chip | `--bg-elevated` @85% + blur, `--border`, `--radius-pill` | `.ticket-side-pane__nav` proposed | half transparent at rest → opaque on hover/focus; right-click opens the history jump menu (`--foreground` title / `--text-subtle` mono path rows) |
-| Session pill | `--bg-elevated`, `--state-active-bg`/`--state-active-fg` emphasis | `.ticket-side-pane__pill` proposed | `--radius-pill`; one button, names the tucked doc |
-| Pane error | `--destructive` | `role="alert"` | previous pane document not lost on fetch failure |
-| Prose | `--foreground`, `--muted-foreground`, `--primary` | `.prose.prose--documents` | same pipeline as Documents view |
-| Backdrop / z-index / close × | n/a | `MODALS.md` | unchanged from ticket viewer |
+## First-load failure — reference body fragment
+
+```wireloom
+window "Reference — source unavailable":
+  panel:
+    icon name="warning"
+    text "Couldn’t load this document" bold
+    text "sf-api/docs/prd/cms/public-search.md" muted size=small
+```
+
+Keep the source-aware toolbar above this body. With an already loaded document, retain its content/title/path and identify the failed target through the existing error treatment instead. Render crashes stay contained by PaneErrorBoundary. No failure may expose another project's cached document or history as the active project's data.
+
+## Reuse
+
+Surface/prose use --background and .prose--document; labels/separators use --muted-foreground/--border; controls use the existing neutral hover, selected tint and focus ring. The reveal pill keeps its existing elevated/pill tokens. Fullscreen, details and promotion source headers are owned by ticket-viewer.mockups.md rather than duplicated here.

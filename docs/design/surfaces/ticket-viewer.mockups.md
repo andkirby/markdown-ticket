@@ -1,298 +1,221 @@
-# Ticket Viewer — Wireframe Schema
+# Ticket Viewer — Mockups
 
-Related spec: `ticket-viewer.spec.md`
+Canonical review states for the [viewer spec](ticket-viewer.spec.md) and [interactions](ticket-viewer.interactions.md). **MDT-248 UAT r12 target; not implemented/verified runtime screenshots.**
+The shared shell belongs here; split/reference states belong to [side-pane mockups](ticket-side-doc.mockups.md).
 
-The side reading pane (MDT-248) is not drawn here — its states have their own file: `ticket-side-doc.mockups.md`. The closed-pane state uses the same shell below. External-reference groups follow the [shared badge mockups](external-reference-badge.mockups.md), including the supplied 16px Jira SVG; Wireloom uses a symbolic named icon slot.
+**Temporary review images:** optional local images may contain obsolete Documents/ellipsis controls/order and illustrative counts. They are excluded from Git and must not govern implementation. Delete them after implementation and UAT are complete.
 
-## Default State (Ticket with Sub-Documents)
+The specs and embedded Wireloom below are self-contained and govern hierarchy, source labels, counts and ownership. Wireloom uses text labels for icon buttons so their scopes remain reviewable; runtime uses the existing icon set. Optional pre-development images can remain locally in the ticket assets directory until implementation/UAT completes.
+
+## Default single ticket — details collapsed
 
 ```wireloom
-window "Ticket Viewer — With Sub-Docs":
+window "Ticket reader — single":
+  header:
+    row:
+      text "= ABC-003 • Add public website global search for JRP-95" bold
+      spacer
+      button "Show ticket details" id="tv-details"
+      button "Trace Graph" icon="tech"
+      button "Fullscreen"
+      button "Close viewer"
   panel:
     row:
-      text "MDT-042🪾 • Implement user authentication" bold id="tv-title"
+      button "Back" disabled
+      button "Forward" disabled
+      button "Implementation ▾" id="tv-picker"
       spacer
-      button "×" id="tv-close"
+      button "Copy path"
     divider
-    row:
-      chip "In Progress" id="tv-status"
-      chip "High" accent=danger id="tv-priority"
-      chip "Feature" id="tv-type"
-      chip "Phase:Auth" id="tv-phase"
-    row:
-      chip "Assignee:Bob" id="tv-assignee"
-      chip "🪾 Worktree" id="tv-worktree"
-      chip "003" icon="link" id="tv-related"
-      chip "95 59 68 ↗" icon="jira" id="tv-external-refs"
-      spacer
-      button "Trace Graph" icon="tech" id="tv-trace-action"
-    divider
-    tabs id="tv-doc-tabs":
-      tab "Main" active id="tv-tab-main"
-      tab "API Design ▶" id="tv-tab-api"
-      tab "Implementation" id="tv-tab-impl"
-    divider
-    row:
-      col 120:
-        list:
-          item "Overview" id="tv-toc-1"
-          item "Acceptance Criteria" id="tv-toc-2"
-      col fill:
-        row:
-          spacer
-          text "Updated 2h ago" muted size=small id="tv-timestamp"
-        text "### Overview" bold id="tv-h2"
-        text "This ticket covers..." muted
-        text "### Acceptance Criteria" bold
-        text "- [ ] Users can log in" muted
-        text "- [ ] Sessions persist" muted
-
-annotation "Title bar with border-b" target="tv-title" position=top
-annotation "Badge bar wraps if needed" target="tv-status" position=right
-annotation "Trace Graph appears only when the standard trace store exists" target="tv-trace-action" position=right
-annotation "Document tabs hidden if no subdocs" target="tv-doc-tabs" position=right
-annotation "RelativeTimestamp, absolute right-4 top-4" target="tv-timestamp" position=right
-annotation "ToC: collapsible sidebar" target="tv-toc-1" position=left
-annotation "Markdown body uses markdown-content.spec.md ticket variant" target="tv-h2" position=right
+    text "Implementation" bold
+    text "Reuse the existing search service and index public content."
+    text "Search behavior" bold
+    text "Return matching public documents while preserving source context."
 ```
 
-The Jira group above shows three individually clickable short keys and no redundant dropdown. Viewer refs stay visible when board badges are hidden. Longer instance groups use the shared hidden-only +N pattern; unavailable refs retain non-navigating explanations.
+Priority is the leading TicketCode glyph, not a moved metadata button. The single H1 is the ticket identity; main toolbar does not repeat its key. Header and toolbar stay pinned while prose scrolls. Trace is conditional on the main ticket's store. Both details/Trace/Fullscreen/Close are icon controls in the runtime; labels above convey accessible names.
 
-## No Sub-Documents (Main Content Only)
+## Details expanded — header fragment
 
 ```wireloom
-window "Ticket Viewer — No Sub-Docs":
+window "Ticket reader — details expanded":
+  header:
+    row:
+      text "= ABC-003 • Add public website global search for JRP-95" bold
+      spacer
+      button "Hide ticket details" primary
+      button "Trace Graph" icon="tech"
+      button "Fullscreen"
+      button "Close viewer"
+    row:
+      chip "In Progress" accent=warning
+      chip "Medium" accent=warning
+      chip "95 59 68"
   panel:
     row:
-      text "MDT-042 • Fix login redirect" bold id="tv-ns-title"
+      button "Back"
+      button "Forward" disabled
+      button "Implementation ▾"
       spacer
-      button "×"
-    divider
-    row:
-      chip "Proposed" id="tv-ns-status"
-      chip "Medium" id="tv-ns-priority"
-      chip "Bug" id="tv-ns-type"
-    divider
-    row:
-      spacer
-      text "Updated 2h ago" muted size=small id="tv-ns-timestamp"
-    text "## Problem" bold
-    text "Users are redirected to..." muted
-    text "## Steps to Reproduce" bold
-    text "1. Navigate to /login" muted
-    text "2. Enter credentials" muted
-
-annotation "No tab row, no ContextBadge/Relationship badges" target="tv-ns-title" position=right
+      button "Copy path"
 ```
 
-## Trace Store Present
+The ordinary badge flow is directly below title, not a popover. This is one browser/device-wide preference across tickets/projects/reopen. Hover/focus only adds tooltip/highlight. Badge wrapping preserves the reading position; board badge filtering is separate. External links are existing reference-group controls, not generic chips in the runtime.
+
+## Main document picker — Open beside
 
 ```wireloom
-window "Ticket Viewer — Trace Store Present":
+window "Ticket reader — document picker":
   panel:
     row:
-      text "MDT-169 • Document view filename tabs" bold id="tv-trace-title"
+      button "Back"
+      button "Forward" disabled
+      button "Implementation ▾"
       spacer
-      button "×"
+      button "Copy path"
     divider
+    input placeholder="Find a document…" type=search
     row:
-      chip "In Progress"
-      chip "High" accent=danger
-      chip "Feature"
+      button "Main"
       spacer
-      button "Trace Graph" icon="tech" id="tv-trace-button"
-    divider
-    tabs:
-      tab "Main" active
-      tab "Requirements"
-      tab "Tasks"
-    divider
-    text "## Summary" bold
-    text "Ticket content remains the default view." muted
-
-annotation "Action is rendered, not disabled, only after trace metadata confirms store presence" target="tv-trace-button" position=right
+      button "Open Main beside"
+    row:
+      button "Acceptance matrix"
+      chip "Beside"
+      spacer
+      button "Open acceptance matrix beside"
+    row:
+      button "Architecture ▾"
+    row:
+      text "Architecture /"
+      button "Main"
+      spacer
+      button "Open architecture/Main beside"
+    row:
+      text "Architecture /"
+      button "Trace"
+      spacer
+      button "Open architecture/trace beside"
+    row:
+      button "Implementation" primary
+      chip "Main pane"
+      spacer
+      button "Open implementation beside"
+    row:
+      button "Review"
+      spacer
+      button "Open review beside" id="tv-open-beside"
 ```
 
-## Trace Graph Shell
+This frame shows only the toolbar and its open picker, not a second permanent sidebar. The row's name and split-icon action are independent controls. Folder indentation models the tree; no new tab row appears. The main document remains unchanged when Open beside replaces the existing reference. Full source identity controls Main pane/Beside markers.
+
+## Promotion — another ticket becomes single main
 
 ```wireloom
-window "Ticket Viewer — Trace Graph Shell":
-  panel id="trace-shell":
-    panel id="trace-iframe":
-      row id="trace-floating-layer":
-        backbutton "Back" id="trace-back"
-      text "Trace dashboard iframe" muted
-      text "Dashboard styles and controls are isolated inside the iframe." muted
-
-annotation "Back floats above the iframe with a translucent non-blurred background; it is not part of the dashboard HTML" target="trace-back" position=bottom
-annotation "Viewport shell has no modal padding, margin, rounded card, or shadow" target="trace-shell" position=left
-annotation "Iframe is a black box; this mockup does not specify graph-board internals" target="trace-iframe" position=right
-```
-
-> **URL deep link (MDT-174):** the shell looks identical whether opened by the `Trace Graph` action or by a URL carrying `#trace`. Opening appends `#trace` to the address bar; `Back`/overlay/Escape removes it. See `ticket-viewer.spec.md` → TraceGraphShell for the full rule.
-
-## Trace Graph Unavailable After Open
-
-```wireloom
-window "Ticket Viewer — Trace Graph Unavailable":
-  panel:
-    row id="trace-error-floating-layer":
-      backbutton "Back" id="trace-error-back"
-    panel:
-      icon name="warning" id="trace-error-icon"
-      text "Trace store unavailable" bold id="trace-error-title"
-      text "The trace data for this ticket could not be loaded." muted
-
-annotation "Back remains available even when the iframe/store fails" target="trace-error-back" position=bottom
-annotation "Error belongs to the shell because the store failed before dashboard use" target="trace-error-title" position=right
-```
-
-## Sub-Document Loading
-
-```wireloom
-window "Ticket Viewer — Sub-Doc Loading":
+window "Ticket reader — promoted ticket document":
+  header:
+    row:
+      text "↑ ABC-008 • Index public website content" bold
+      spacer
+      button "Hide ticket details" primary
+      button "Trace Graph" icon="tech"
+      button "Restore"
+      button "Close viewer"
+    row:
+      chip "Open"
+      chip "High" accent=warning
+      chip "68"
   panel:
     row:
-      text "MDT-042🪾 • Implement auth" bold
+      button "Back"
+      button "Forward" disabled
+      button "Architecture ▾"
       spacer
-      button "×"
+      button "Copy path"
     divider
-    row:
-      chip "In Progress"
-      chip "High" accent=danger
-      chip "Feature"
-    divider
-    tabs:
-      tab "Main"
-      tab "API Design ▶" active id="tv-load-tab"
-      tab "Implementation"
-    divider
-    spinner "Loading…" id="tv-spinner"
-    text "▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓" muted id="tv-load-content"
-
-annotation "Active tab changed; content at opacity-50" target="tv-load-content" position=right
-annotation "Loading overlay: bg-background/50, animate-pulse" target="tv-spinner" position=right
+    text "Architecture" bold
+    text "The index contains only public website content."
 ```
 
-## Ticket Not Found
+This follows Close left pane with ABC-008/architecture as the reference. No divider, empty column or pane close remains. Header, priority and all metadata belong to ABC-008; expanded preference survives. Back returns to the earlier main location without recreating the split. The sample's Trace icon assumes the promoted ticket has a store.
+
+## Promotion — repository document becomes single main
 
 ```wireloom
-window "Ticket Viewer — Not Found":
+window "Reader — promoted repository document":
+  header:
+    row:
+      text "Public website search" bold
+      spacer
+      button "Restore"
+      button "Close viewer"
   panel:
     row:
+      button "Back"
+      button "Forward" disabled
+      text "sf-api/docs/prd/cms/public-search.md" muted size=small
       spacer
-      button "×" id="tv-nf-close"
-    icon name="warning" id="tv-nf-icon"
-    text "Ticket Not Found" bold id="tv-nf-heading"
-    text "Ticket 'MDT-999' not found" muted id="tv-nf-msg"
-
-annotation "AlertTriangle icon, centered" target="tv-nf-icon" position=top
+      button "Copy path"
+      button "Open in Documents"
+    divider
+    text "Search API" bold
+    text "Public search accepts a query and returns grouped results."
 ```
 
-## Sub-Document Error
+Repository mode has no ticket key, priority, details or Trace action. Details preference is retained without rendering a badge row. There is no repository-picker chevron. Uses /prj/{sourceProject}/read?doc={encodedProjectRelativePath}. Fresh/reloaded entry has no active reference and one main location. In-session Back returns to the preceding ticket; Close replaces with the source Documents workspace URL. Main history clears when the viewer closes.
+
+## Narrow screen — ticket picker sheet
 
 ```wireloom
-window "Ticket Viewer — Sub-Doc Error":
+window "Ticket reader — narrow picker":
+  header:
+    row:
+      text "= ABC-003 • Public website search" bold
+      spacer
+      button "Details"
+      button "Fullscreen"
+      button "Close viewer"
   panel:
     row:
-      text "MDT-042🪾 • Implement auth" bold
-      spacer
-      button "×"
-    divider
+      button "Back"
+      button "Forward" disabled
+      button "Implementation ▾"
+      button "Copy path"
+    text "Implementation" bold
+    text "Reuse the existing search service."
+  sheet position=bottom title="Ticket documents":
+    input placeholder="Find a document…" type=search
     row:
-      chip "In Progress"
-      chip "High" accent=danger
-      chip "Feature"
-    divider
-    tabs:
-      tab "Main"
-      tab "API Design" id="tv-err-tab"
-      tab "Implementation"
-    divider
-    text "Failed to load document: file not found" accent=danger id="tv-error"
-
-annotation "text-destructive, role=alert" target="tv-error" position=right
+      button "Main"
+      spacer
+      button "Open Main beside"
+    row:
+      button "Implementation" primary
+      spacer
+      button "Open implementation beside"
+    row:
+      button "Review"
+      spacer
+      button "Open review beside"
 ```
 
-## Mobile
+At <640px the picker is a sheet with the same hierarchy/search/actions. The title above is visually truncated; complete identity and icon labels remain accessible. Trace/Epic actions, when applicable, retain reachable icon controls; the default example has no trace store. Header scope does not change on mobile.
+
+## Trace graph shell — preserved tool boundary
 
 ```wireloom
-window "Ticket Viewer — Mobile":
+window "Ticket reader — Trace Graph":
   panel:
-    row:
-      text "MDT-042 • Fix login" bold id="tv-m-title"
-      spacer
-      button "×"
-    divider
-    row:
-      chip "Proposed"
-      chip "Medium"
-      chip "Bug"
-    row:
-      button "Trace Graph" icon="tech" id="tv-m-trace"
-    divider
-    row:
-      spacer
-      text "Updated 2h ago" muted size=small
-    text "## Problem" bold
-    text "Users are redirected..." muted
-    text "## Steps" bold
-    text "1. Navigate to /login" muted
+    backbutton "Back"
+    text "Trace dashboard iframe" muted
 ```
 
-## Epic Ticket — Board CTA (MDT-246)
+Back floats over the existing isolated full-viewport iframe. The dashboard owns its own UI. #trace remains the source of truth; no reader document toolbar/content/ToC is visible over the tool.
 
-An epic ticket opened in the viewer. Epics carry no phase badge; the `Epics →` action appears in the header action cluster, before `Trace Graph`, and is the epic's way out to its swimlane lane.
+## Loading and failures
 
-```wireloom
-window "Ticket Viewer — Epic Ticket (MDT-246)":
-  panel:
-    row:
-      text "MDT-231⚡ • UI/UX improvements" bold id="tv-epic-title"
-      spacer
-      button "×" id="tv-epic-close"
-    divider
-    row:
-      chip "Approved" id="tv-epic-status"
-      chip "Medium" id="tv-epic-priority"
-      chip "Architecture" id="tv-epic-type"
-      spacer
-      button "Epics →" id="tv-epic-cta"
-      button "Trace Graph" icon="tech" id="tv-epic-trace"
-    divider
-    text "## 1. Description" bold
-    text "Groups UI/UX follow-up tickets..." muted
+Use the default shell above with the relevant document body replaced by Loading… or a role=alert failure. Keep header/navigation usable and source-labelled. Missing tickets use Ticket Not Found; missing main subdocs fall back to Main. Reference first-load/replacement/crash behavior is owned by the side-pane mockups/spec.
 
-annotation "Epic key line: Zap rides the key (TicketCode);\nno ContextBadge[phase] — epics have no phaseEpic." target="tv-epic-title" position=top
-annotation "Rendered only when level === 'epic'.\nSame 32px chrome recipe as Trace Graph; rows-3 leading,\narrow-right trailing (the go-verb — this control leaves\nthe modal). Tooltip/aria: 'Show MDT-231 on Epics board'.\nOne navigation: closes the modal, lands on\n/prj/MDT/epics?epic=MDT-231 (focused arrival)." target="tv-epic-cta" position=right
-```
+## Semantic review anchors
 
-Mobile behavior:
-
-- `Epics →` follows the same wrap rule as `Trace Graph`: it moves to its own row when badges leave no stable inline space.
-
-- Sub-document tabs stay visible when sub-documents exist, but use horizontal scroll instead of wrapping.
-- The table of contents is hidden by default on mobile and opens from a compact content-menu control.
-- Timestamp remains above content, not absolute-positioned over the title.
-- Trace Graph wraps onto its own row when badges leave no stable inline space.
-
-## Annotations
-
-| Element | Token | Class | Notes |
-|---------|-------|-------|-------|
-| Modal backdrop | n/a | `bg-black/50 backdrop-blur-sm` | Per MODALS.md |
-| Modal z-index | n/a | `z-50` | |
-| Close button | `--muted-foreground` | `absolute right-3 top-3 z-20` | 8×8, hover highlight |
-| Title bar | `--foreground` | `text-base font-semibold` | `border-b`, `px-4 py-3` |
-| Badge bar | badge.css | `flex flex-wrap gap-2` | `border-b`, `px-4 py-2.5` |
-| Document tabs | `--primary` | `sticky top-0 z-10` | Active: `border-b-2 border-primary` |
-| Trace action | `--primary`, `--border` | small secondary button or inline Tailwind | Ticket-scoped action, hidden when no trace store |
-| Epic board action | `--primary`, `--border` | same chrome-control recipe as Trace action | Epic tickets only; label `Epics →` (rows-3 leading, arrow-right trailing); tooltip/aria `Show {KEY} on Epics board`; single navigation to `/prj/:code/epics?epic=KEY` |
-| Trace back control | `--background`, `--border` | `.trace-graph-shell__back` | Floating translucent Back over iframe |
-| Trace iframe | n/a | iframe inside `.trace-graph-shell` | Dashboard styles remain isolated; graph internals are out of scope |
-| Content area | `--background` | `px-4 py-4 sm:px-5` | |
-| RelativeTimestamp | `--muted-foreground` | `absolute right-4 top-4` | z-[1] |
-| Loading overlay | `--background` | `bg-background/50` | `animate-pulse` |
-| Error text | `--destructive` | `text-destructive` | `role="alert"` |
-| Ticket code | `--primary` | `text-primary dark:text-blue-400` | In title |
-| ToC | `--muted-foreground` | collapsible sidebar | State persisted via tocConfig |
+Reuse .modal__headline, TicketCode priority template, .badge[data-*], .modal__close, --state-hover-bg and --state-active-bg/fg. New compositions are disclosure, title-triggered picker, independent main history and source-safe promotion. No new palette or hand-built modal is proposed.

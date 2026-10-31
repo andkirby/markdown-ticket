@@ -65,16 +65,6 @@
       ]
     },
     {
-      "id": "BR-1.7",
-      "kind": "behavior",
-      "text": "WHEN a ticket or epic link is activated inside the ticket modal, the system shall swap the ticket column content in place and leave the pane session unchanged.",
-      "sourceRef": "CR MDT-248 §2 Success Conditions",
-      "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
       "id": "BR-1.8",
       "kind": "behavior",
       "text": "WHEN the pane hand-off control is activated, the system shall open the Documents view on the pane current document.",
@@ -100,26 +90,6 @@
       "text": "WHEN the Escape key is pressed while the pane is not visible and no trace shell is open, the system shall close the ticket modal as it does today.",
       "sourceRef": "CR MDT-248 §2 Esc chain",
       "routePolicy": "bdd",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "C1",
-      "kind": "constraint",
-      "text": "In split layout the ticket column width shall be clamp(420px, 46%, 640px) with the pane minimum 460px, and the widened modal capped at min(94vw, 1560px).",
-      "sourceRef": "spec ticket-side-doc.spec.md Layout",
-      "routePolicy": "tests",
-      "tags": [
-        "timing:now"
-      ]
-    },
-    {
-      "id": "C2",
-      "kind": "constraint",
-      "text": "Pane open, hide, and close shall preserve the ticket column scroll position exactly and keep the ticket column visually anchored (top edge and left edge do not move; only the modal right edge grows).",
-      "sourceRef": "spec Layout + MODALS.md no-jump",
-      "routePolicy": "tests",
       "tags": [
         "timing:now"
       ]
@@ -225,13 +195,6 @@
       ]
     },
     {
-      "id": "Edge-5",
-      "kind": "edge_case",
-      "text": "IF the ticket modal closes while a session is active, THEN the session is kept as a per-ticket snapshot in localStorage (scoped by project and ticket, FILO cap of 5 tickets) and reopening that ticket restores it hidden with the reveal pill; activating the pane close control discards the session and clears its snapshot.",
-      "sourceRef": "UAT r7",
-      "routePolicy": "tests"
-    },
-    {
       "id": "BR-1.11",
       "kind": "behavior",
       "text": "WHEN the pane history back or forward control is right-clicked, THEN the system shall show that direction's history entries as menu rows (document title over mono file path) and activating an entry shall jump the pane to it without truncating the history stack.",
@@ -251,6 +214,104 @@
       "text": "IF the pane subtree throws during render, THEN the error shall be contained by a boundary: the pane shows an inline fallback naming the ticket as unharmed while the ticket column, modal chrome, and session keep working.",
       "sourceRef": "UAT r8",
       "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.7",
+      "kind": "behavior",
+      "text": "WHEN a ticket or epic link is activated inside the viewer, the system shall replace the main ticket/document in place; same-project navigation shall keep the reference pane unchanged, while a project change shall activate only that destination project's saved reference history.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.13",
+      "kind": "behavior",
+      "text": "WHEN a ticket document picker is opened, the system shall show a searchable document tree including Main; selecting a name opens it in that pane and activating its separately labelled Open beside action opens it in the right pane without changing the main document or scroll.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.15",
+      "kind": "behavior",
+      "text": "WHILE reading in single, split or fullscreen mode, the system shall keep a compact shared identity header and aligned pane navigation toolbars visible, place priority before the main ticket key, expose Copy path for both documents, identify the right document's source, and offer Trace Graph as an icon only when available.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.16",
+      "kind": "behavior",
+      "text": "WHEN the highlighted ticket-details control is clicked or keyboard-activated, the system shall toggle the badge row immediately below the title and remember that state device-wide across tickets, projects and viewer reopen; hover or focus shows a tooltip, not another badge dropdown, and repository documents hide badges without resetting the preference.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.17",
+      "kind": "behavior",
+      "text": "WHEN the main pane is closed while two panes are visible, the right document shall become the single main document with scroll preserved; a ticket document supplies its owner's title, key, priority and metadata, while a repository document supplies its own title/path without ticket-only controls; Back shall restore the prior main reading location.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.18",
+      "kind": "behavior",
+      "text": "WHEN Fullscreen or Restore is activated, the reader shall toggle between viewport and framed layout without losing documents, selected paths, pane histories, scroll positions or the split preference; Close viewer remains distinct from pane close.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "C1",
+      "kind": "constraint",
+      "text": "In framed split layout the modal shall be capped at min(94vw, 1560px), use the default main-column width clamp(420px,46%,640px), and allow a persisted draggable divider with a 340px floor per column; below 1100px use an overlay; fullscreen fills the viewport.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C2",
+      "kind": "constraint",
+      "text": "Opening, hiding, discarding, promoting, resizing and changing reader header state shall preserve the surviving documents' reading positions; content scrolls beneath pinned chrome and mode changes shall not reset either pane's document or history.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "C8",
+      "kind": "constraint",
+      "text": "Every document/history/cache identity shall include its owning project and canonical relative document path, plus owning ticket when applicable; storage selection, fetch, link resolution, hand-off, copy and error fallback shall not rebase a document against the currently active left ticket's project.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "Edge-8",
+      "kind": "edge_case",
+      "text": "IF a fetch, cache hit, title/scroll callback or storage write completes after switching projects or promoting a document, THEN it shall not overwrite, display in, or be saved under the new project's reader context.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.14",
+      "kind": "behavior",
+      "text": "WHEN Back or Forward is activated in either pane, the system shall restore that pane's visited ticket/document location and scroll independently; main-pane history exists only for the current viewer-open lifetime and resets on close, while only reference sessions persist; these controls represent visit history, not board ordering.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "BR-1.19",
+      "kind": "behavior",
+      "text": "WHEN the reader moves between projects, the system shall preserve a separate project-keyed reference history capped at 50 entries per project, evict oldest entries beyond the cap, restore only the destination project's new-format session, and resolve entries using their owning project; legacy project+ticket snapshots are ignored and never migrated or reinterpreted.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "bdd"
+    },
+    {
+      "id": "Edge-5",
+      "kind": "edge_case",
+      "text": "IF the viewer closes, THEN retain only new-format project-keyed reference sessions (50 entries per project, oldest evicted) and restore them hidden on reopening the project; main-pane history resets; right-pane Close clears only the active project's reference session; first r12 load ignores all legacy project+ticket snapshots so each project starts with empty new-format history.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "tests"
+    },
+    {
+      "id": "BR-1.20",
+      "kind": "behavior",
+      "text": "WHEN a repository reference is promoted, the reader shall push /prj/{sourceProject}/read?doc={encodedProjectRelativePath}, preserve current main visit history, and show document-only main mode; in-session browser Back returns to the prior ticket URL, Close replaces the reader URL with that source's Documents-view URL, and direct/reloaded reader URLs open one document with no active reference and no restored main history; existing Documents-view links keep their meaning.",
+      "sourceRef": "docs/CRs/MDT-248/requirements.md",
+      "routePolicy": "bdd"
     }
   ],
   "scenarios": [
@@ -311,17 +372,6 @@
       "sourceRef": "requirements BR-1.6"
     },
     {
-      "id": "ticket_link_swaps_column_pane_survives",
-      "title": "Ticket link swaps column, pane survives",
-      "covers": [
-        "BR-1.7"
-      ],
-      "given": "the side pane is showing a document and the ticket body links to another ticket",
-      "when": "I click the ticket link",
-      "then": "the ticket column shows the other ticket while the pane keeps showing my document with its history",
-      "sourceRef": "requirements BR-1.7"
-    },
-    {
       "id": "handoff_opens_documents_view",
       "title": "Hand-off opens the Documents view",
       "covers": [
@@ -375,6 +425,129 @@
       "when": "the reference is activated",
       "then": "the ticket column swaps to that ticket with the pane session surviving, and no documents navigation occurs",
       "sourceRef": "UAT r9"
+    },
+    {
+      "id": "ticket_link_swaps_column_pane_survives",
+      "title": "Same-project ticket navigation preserves the reference",
+      "covers": [
+        "BR-1.7"
+      ],
+      "given": "Ticket A and a reference document are open in one project.",
+      "when": "A related ticket B is followed in that project.",
+      "then": "B becomes main and the reference document, history and scroll remain unchanged.",
+      "sourceRef": "docs/CRs/MDT-248/bdd.md"
+    },
+    {
+      "id": "ticket_document_picker_opens_beside",
+      "title": "Pick and compare internal ticket documents",
+      "covers": [
+        "BR-1.13"
+      ],
+      "given": "Implementation is open and the searchable ticket document picker is visible.",
+      "when": "The user filters for architecture and activates Open beside, then opens review beside.",
+      "then": "The main document stays unchanged; review replaces architecture on the right and Back can return to architecture.",
+      "sourceRef": "docs/CRs/MDT-248/bdd.md"
+    },
+    {
+      "id": "compact_headers_preserve_document_identity",
+      "title": "Pinned headers identify and copy both source documents",
+      "covers": [
+        "BR-1.15"
+      ],
+      "given": "Main shows ticket B and reference shows A/architecture or a repository document.",
+      "when": "Both panes are scrolled and Copy path is used on each.",
+      "then": "Both toolbars stay visible; each copy and provenance names its actual source; priority stays before B's key and Trace targets B only when available.",
+      "sourceRef": "docs/CRs/MDT-248/bdd.md"
+    },
+    {
+      "id": "ticket_details_preference_survives_navigation",
+      "title": "Details toggle is remembered across tickets and projects",
+      "covers": [
+        "BR-1.16"
+      ],
+      "given": "Ticket details are collapsed.",
+      "when": "The details control is activated, another ticket/project opened, and the viewer closed and reopened.",
+      "then": "Details remain expanded; a repository document omits ticket badges without clearing the preference and returning to a ticket restores the expanded row.",
+      "sourceRef": "docs/CRs/MDT-248/bdd.md"
+    },
+    {
+      "id": "close_main_promotes_ticket_document",
+      "title": "Closing main promotes the other ticket document",
+      "covers": [
+        "BR-1.17"
+      ],
+      "given": "Main is A/implementation and reference is B/architecture with a saved scroll offset.",
+      "when": "Close left pane is activated.",
+      "then": "B/architecture fills the reader, header and metadata belong to B, its scroll survives, and main Back returns to A/implementation.",
+      "sourceRef": "docs/CRs/MDT-248/bdd.md"
+    },
+    {
+      "id": "close_main_promotes_repository_document",
+      "title": "Closing main promotes a repository reference",
+      "covers": [
+        "BR-1.17"
+      ],
+      "given": "A ticket and a repository document are displayed side by side.",
+      "when": "The main pane is closed.",
+      "then": "The repository document fills the reader with its own title/path, copy and hand-off; ticket badges and Trace disappear and Back can return to the prior main ticket.",
+      "sourceRef": "docs/CRs/MDT-248/bdd.md"
+    },
+    {
+      "id": "reader_fullscreen_restores_layout",
+      "title": "Fullscreen and Restore preserve reading context",
+      "covers": [
+        "BR-1.18"
+      ],
+      "given": "Two documents have independent histories and scroll positions.",
+      "when": "Fullscreen and then Restore are activated.",
+      "then": "The reader frame changes but both documents, histories, scroll positions and split preference survive.",
+      "sourceRef": "docs/CRs/MDT-248/bdd.md"
+    },
+    {
+      "id": "project_switch_restores_own_reference_history",
+      "title": "Project histories remain isolated and resumable",
+      "covers": [
+        "BR-1.7",
+        "BR-1.19"
+      ],
+      "given": "Project A has a two-document reference history and project B has its own distinct history, including an identically named path.",
+      "when": "The user switches A to B and back, then closes/reopens the viewer.",
+      "then": "Each project exposes only its own history/content/title/scroll and reopens hidden; no A path is requested with B's project identity.",
+      "sourceRef": "docs/CRs/MDT-248/bdd.md"
+    },
+    {
+      "id": "main_history_restores_ticket_document",
+      "title": "Main visited locations restore only within one viewer-open",
+      "covers": [
+        "BR-1.14"
+      ],
+      "given": "The main pane visited A/requirements, B/Main and C/architecture with independent reference history.",
+      "when": "Main Back/Forward is used, then the viewer is closed and reopened.",
+      "then": "Main locations/scroll restore before close and main history resets on reopen; only reference sessions restore hidden.",
+      "sourceRef": "docs/CRs/MDT-248/bdd.md"
+    },
+    {
+      "id": "legacy_history_is_ignored_and_capped",
+      "title": "Legacy snapshots are ignored and each project retains at most 50 references",
+      "covers": [
+        "BR-1.19"
+      ],
+      "given": "Valid legacy project+ticket snapshots exist with no new-format project store.",
+      "when": "r12 initializes and 51 distinct references are visited in project A while B has separate state.",
+      "then": "No legacy path appears; A retains the newest 50 in order, index and metadata stay valid, and B is unchanged.",
+      "sourceRef": "docs/CRs/MDT-248/bdd.md"
+    },
+    {
+      "id": "repository_reader_route_entry_and_exit",
+      "title": "Dedicated repository reader supports promotion, deep link, Back and Close",
+      "covers": [
+        "BR-1.17",
+        "BR-1.20"
+      ],
+      "given": "A ticket plus repository reference is open; an ordinary Documents link is also available.",
+      "when": "The reference is promoted, browser Back/Close exercised, and the read URL opened directly or reloaded.",
+      "then": "Promotion pushes source /read?doc=; Back restores the preceding ticket; Close replaces with source /documents?file=; direct/reload is single document mode with no active reference or main history; ordinary Documents URLs keep opening the workspace.",
+      "sourceRef": "docs/CRs/MDT-248/bdd.md"
     }
   ],
   "obligations": [
@@ -445,18 +618,6 @@
         "ART-side-pane-css"
       ],
       "sourceRef": "architecture.md D3+D4"
-    },
-    {
-      "id": "OBL-context-survival",
-      "title": "Ticket column swaps keep the pane session alive",
-      "derivedFrom": [
-        "BR-1.7"
-      ],
-      "artifactIds": [
-        "ART-ticket-viewer",
-        "ART-use-side-pane"
-      ],
-      "sourceRef": "architecture.md D1"
     },
     {
       "id": "OBL-handoff",
@@ -542,19 +703,129 @@
       "sourceRef": "tests.md"
     },
     {
+      "id": "OBL-context-survival",
+      "title": "Same-project ticket hops preserve reference; cross-project hops select destination session",
+      "derivedFrom": [
+        "BR-1.7",
+        "BR-1.19",
+        "C8",
+        "Edge-8"
+      ],
+      "artifactIds": [
+        "ART-ticket-viewer",
+        "ART-use-side-pane",
+        "ART-side-pane-component",
+        "ART-session-store"
+      ],
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "OBL-project-isolation",
+      "title": "Qualify document identity and isolate live state, storage, caches and async results by project",
+      "derivedFrom": [
+        "BR-1.19",
+        "C8",
+        "Edge-5",
+        "Edge-8"
+      ],
+      "artifactIds": [
+        "ART-ticket-viewer",
+        "ART-use-side-pane",
+        "ART-side-pane-component",
+        "ART-session-store"
+      ],
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "OBL-reader-navigation-header",
+      "title": "Searchable ticket documents, independent main history, pinned identity and device details toggle",
+      "derivedFrom": [
+        "BR-1.13",
+        "BR-1.14",
+        "BR-1.15",
+        "BR-1.16",
+        "BR-1.18"
+      ],
+      "artifactIds": [
+        "ART-ticket-viewer",
+        "ART-header",
+        "ART-picker",
+        "ART-main-navigation",
+        "ART-reader-preferences",
+        "ART-side-pane-component",
+        "ART-modal",
+        "ART-ticket-viewer-css"
+      ],
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "OBL-reader-regression",
+      "title": "Verify project boundaries, header/navigation and source-safe promotion with deterministic reader regressions",
+      "derivedFrom": [
+        "BR-1.13",
+        "BR-1.14",
+        "BR-1.15",
+        "BR-1.16",
+        "BR-1.17",
+        "BR-1.18",
+        "BR-1.19",
+        "C8",
+        "Edge-8"
+      ],
+      "artifactIds": [
+        "ART-reader-uat-tests",
+        "ART-e2e-spec",
+        "ART-selectors"
+      ],
+      "sourceRef": "docs/CRs/MDT-248/tests.md"
+    },
+    {
       "id": "OBL-ux-docs-sync",
-      "title": "Durable UX docs (spec + interactions) stay in sync with the implemented pane contract",
+      "title": "Canonical approved reader specs, interactions and mockups remain aligned; runtime readiness is verified separately",
       "derivedFrom": [
         "C1",
         "C2",
         "C4",
-        "C5"
+        "C5",
+        "BR-1.13",
+        "BR-1.14",
+        "BR-1.15",
+        "BR-1.16",
+        "BR-1.17",
+        "BR-1.18",
+        "BR-1.19"
       ],
       "artifactIds": [
+        "ART-reader-ux",
         "ART-spec-doc",
-        "ART-interactions-doc"
+        "ART-interactions-doc",
+        "ART-viewer-spec",
+        "ART-viewer-interactions",
+        "ART-viewer-mockups",
+        "ART-side-mockups"
       ],
-      "sourceRef": "ux-design.md"
+      "sourceRef": "docs/CRs/MDT-248/ux-design.md"
+    },
+    {
+      "id": "OBL-reader-promotion",
+      "title": "Promotion adopts source identity atomically and uses a dedicated repository reader route with deterministic entry/Back/Close",
+      "derivedFrom": [
+        "BR-1.17",
+        "BR-1.20",
+        "C2",
+        "C8",
+        "Edge-8"
+      ],
+      "artifactIds": [
+        "ART-ticket-viewer",
+        "ART-main-navigation",
+        "ART-side-pane-component",
+        "ART-header",
+        "ART-reader-routes",
+        "ART-reader-route-table",
+        "ART-reader-route-owner"
+      ],
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
     }
   ],
   "artifacts": [
@@ -641,6 +912,90 @@
       "path": "docs/design/surfaces/ticket-side-doc.interactions.md",
       "kind": "doc",
       "sourceRef": "UX durable docs"
+    },
+    {
+      "id": "ART-session-store",
+      "path": "frontend/src/config/sidePaneSessions.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "ART-header",
+      "path": "frontend/src/components/TicketViewer/CompactTicketHeader.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "ART-picker",
+      "path": "frontend/src/components/TicketViewer/TicketDocumentTabs.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "ART-main-navigation",
+      "path": "frontend/src/components/TicketViewer/useTicketDocumentNavigation.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "ART-reader-preferences",
+      "path": "frontend/src/config/settingsPreferences.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "ART-reader-uat-tests",
+      "path": "frontend/src/components/TicketViewer/reader-uat.test.tsx",
+      "kind": "test",
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "ART-reader-ux",
+      "path": "docs/CRs/MDT-248/ux-design.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "ART-viewer-spec",
+      "path": "docs/design/surfaces/ticket-viewer.spec.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "ART-viewer-mockups",
+      "path": "docs/design/surfaces/ticket-viewer.mockups.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "ART-side-mockups",
+      "path": "docs/design/surfaces/ticket-side-doc.mockups.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "ART-viewer-interactions",
+      "path": "docs/design/surfaces/ticket-viewer.interactions.md",
+      "kind": "doc",
+      "sourceRef": "docs/CRs/MDT-248/ux-design.md"
+    },
+    {
+      "id": "ART-reader-routes",
+      "path": "frontend/src/routes.ts",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "ART-reader-route-table",
+      "path": "frontend/src/App.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
+    },
+    {
+      "id": "ART-reader-route-owner",
+      "path": "frontend/src/components/routes/ProjectRouteHandler.tsx",
+      "kind": "runtime",
+      "sourceRef": "docs/CRs/MDT-248/architecture.md"
     }
   ],
   "testPlans": [
@@ -690,16 +1045,6 @@
       "sourceRef": "bdd.md scenarios + UAT r2-r11 journeys"
     },
     {
-      "id": "TEST-side-doc-pane-sessions",
-      "kind": "unit",
-      "title": "Per-ticket reading-session store: round-trip, project+ticket scoping, FILO cap and eviction protection, key pruning, garbage tolerance, clear",
-      "covers": [
-        "Edge-5"
-      ],
-      "file": "frontend/src/config/sidePaneSessions.test.ts",
-      "sourceRef": "UAT r7"
-    },
-    {
       "id": "TEST-side-doc-pane-boundary",
       "kind": "unit",
       "title": "Pane error boundary containment: throwing pane subtree degrades to the inline fallback without unmounting siblings or the app",
@@ -728,6 +1073,96 @@
       ],
       "file": "frontend/src/config/sidePaneLayout.test.ts",
       "sourceRef": "UAT r3"
+    },
+    {
+      "id": "TEST-reader-ux-contract",
+      "kind": "e2e",
+      "title": "Same-ticket, other-ticket and repository headers plus keyboard/narrow access and reference history regression",
+      "covers": [
+        "BR-1.13",
+        "BR-1.14",
+        "BR-1.15",
+        "BR-1.16",
+        "BR-1.17",
+        "BR-1.18",
+        "BR-1.19",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "C7"
+      ],
+      "file": "tests/e2e/ticket/side-doc-pane.spec.ts",
+      "sourceRef": "docs/CRs/MDT-248/tests.md"
+    },
+    {
+      "id": "TEST-reader-project-isolation",
+      "kind": "unit",
+      "title": "Project-qualified live history/cache/fetch, DROP legacy snapshots, cap 50 oldest eviction and stale-result isolation",
+      "covers": [
+        "BR-1.7",
+        "BR-1.19",
+        "C8",
+        "Edge-5",
+        "Edge-8"
+      ],
+      "file": "frontend/src/components/TicketViewer/reader-uat.test.tsx",
+      "sourceRef": "docs/CRs/MDT-248/tests.md"
+    },
+    {
+      "id": "TEST-side-doc-pane-sessions",
+      "kind": "unit",
+      "title": "New project-keyed reference store: ignore legacy, empty first use, 50-entry cap, oldest eviction, project isolation, reopen and clear",
+      "covers": [
+        "BR-1.19",
+        "Edge-5"
+      ],
+      "file": "frontend/src/config/sidePaneSessions.test.ts",
+      "sourceRef": "docs/CRs/MDT-248/tests.md"
+    },
+    {
+      "id": "TEST-reader-navigation-truth",
+      "kind": "e2e",
+      "title": "12a gate: searchable tree, Open beside, per-viewer-open main history and source-correct copy on both panes",
+      "covers": [
+        "BR-1.13",
+        "BR-1.14",
+        "BR-1.15",
+        "C2",
+        "C8"
+      ],
+      "file": "tests/e2e/ticket/side-doc-pane.spec.ts",
+      "sourceRef": "docs/CRs/MDT-248/tests.md"
+    },
+    {
+      "id": "TEST-reader-navigation-header",
+      "kind": "e2e",
+      "title": "12b gate: pinned shared/source header, device details and fullscreen/Restore bound to navigation truth",
+      "covers": [
+        "BR-1.15",
+        "BR-1.16",
+        "BR-1.18",
+        "C1",
+        "C2",
+        "C3",
+        "C5"
+      ],
+      "file": "tests/e2e/ticket/side-doc-pane.spec.ts",
+      "sourceRef": "docs/CRs/MDT-248/tests.md"
+    },
+    {
+      "id": "TEST-reader-promotion",
+      "kind": "e2e",
+      "title": "Source-safe ticket/repository promotion and dedicated reader direct/reload/Back/Close with unchanged Documents links",
+      "covers": [
+        "BR-1.17",
+        "BR-1.20",
+        "C2",
+        "C8",
+        "Edge-8"
+      ],
+      "file": "tests/e2e/ticket/side-doc-pane.spec.ts",
+      "sourceRef": "docs/CRs/MDT-248/tests.md"
     }
   ],
   "tasks": [
@@ -883,7 +1318,7 @@
     },
     {
       "id": "TASK-10",
-      "title": "Full unit+E2E green, regression suites, docs sync (final)",
+      "title": "Baseline regression closure and final UX-doc reconciliation (r12 adds current target)",
       "ownsArtifactIds": [
         "ART-e2e-spec",
         "ART-selectors",
@@ -893,12 +1328,124 @@
       ],
       "makesGreenIds": [
         "TEST-side-doc-pane",
-        "TEST-side-doc-pane-unit"
+        "TEST-side-doc-pane-unit",
+        "pane_history_context_menu_jumps",
+        "ticket_file_ref_routes_to_ticket_view",
+        "TEST-side-doc-pane-sessions",
+        "TEST-side-doc-pane-boundary",
+        "TEST-side-doc-pane-toast",
+        "TEST-side-doc-pane-split-layout"
       ],
       "skills": [
-        "playwright-cli"
+        "mdt-frontend"
       ],
-      "sourceRef": "tasks.md#task-10"
+      "sourceRef": "docs/CRs/MDT-248/tasks.md"
+    },
+    {
+      "id": "TASK-11",
+      "title": "UAT r12: isolate project histories, DROP legacy snapshots and cap new histories at 50",
+      "ownsArtifactIds": [
+        "ART-ticket-viewer",
+        "ART-use-side-pane",
+        "ART-side-pane-component",
+        "ART-session-store",
+        "ART-reader-uat-tests"
+      ],
+      "makesGreenIds": [
+        "project_switch_restores_own_reference_history",
+        "legacy_history_is_ignored_and_capped",
+        "TEST-reader-project-isolation",
+        "TEST-side-doc-pane-sessions"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "docs/CRs/MDT-248/tasks.md"
+    },
+    {
+      "id": "TASK-12a",
+      "title": "UAT r12 navigation truth: picker/Open beside, per-open main history and copy path",
+      "ownsArtifactIds": [
+        "ART-picker",
+        "ART-main-navigation",
+        "ART-ticket-viewer",
+        "ART-side-pane-component",
+        "ART-e2e-spec",
+        "ART-selectors"
+      ],
+      "makesGreenIds": [
+        "ticket_document_picker_opens_beside",
+        "main_history_restores_ticket_document",
+        "TEST-reader-navigation-truth"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "docs/CRs/MDT-248/tasks.md"
+    },
+    {
+      "id": "TASK-12b",
+      "title": "UAT r12 chrome: compact header, device details preference and fullscreen bound to navigation truth",
+      "ownsArtifactIds": [
+        "ART-header",
+        "ART-reader-preferences",
+        "ART-ticket-viewer",
+        "ART-ticket-viewer-css",
+        "ART-side-pane-component",
+        "ART-side-pane-css",
+        "ART-modal",
+        "ART-modal-css",
+        "ART-e2e-spec",
+        "ART-selectors"
+      ],
+      "makesGreenIds": [
+        "compact_headers_preserve_document_identity",
+        "ticket_details_preference_survives_navigation",
+        "reader_fullscreen_restores_layout",
+        "TEST-reader-navigation-header"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "docs/CRs/MDT-248/tasks.md"
+    },
+    {
+      "id": "TASK-13",
+      "title": "UAT r12: source-safe promotion, dedicated repository reader route and final design/regression gate",
+      "ownsArtifactIds": [
+        "ART-ticket-viewer",
+        "ART-main-navigation",
+        "ART-side-pane-component",
+        "ART-header",
+        "ART-reader-routes",
+        "ART-reader-route-table",
+        "ART-reader-route-owner",
+        "ART-reader-ux",
+        "ART-viewer-spec",
+        "ART-viewer-interactions",
+        "ART-viewer-mockups",
+        "ART-side-mockups",
+        "ART-spec-doc",
+        "ART-interactions-doc",
+        "ART-e2e-spec",
+        "ART-selectors"
+      ],
+      "makesGreenIds": [
+        "close_main_promotes_ticket_document",
+        "close_main_promotes_repository_document",
+        "repository_reader_route_entry_and_exit",
+        "TEST-reader-promotion",
+        "TEST-reader-ux-contract",
+        "TEST-side-doc-pane",
+        "TEST-side-doc-pane-unit",
+        "TEST-side-doc-pane-boundary",
+        "TEST-side-doc-pane-toast",
+        "TEST-side-doc-pane-split-layout"
+      ],
+      "skills": [
+        "mdt-frontend"
+      ],
+      "sourceRef": "docs/CRs/MDT-248/tasks.md"
     }
   ]
 }

@@ -1,8 +1,34 @@
 # Tasks: MDT-248
 
+## Current remaining work — UAT r12
+
+One editing owner per sequential sub-slice: TASK-11 -> TASK-12a -> TASK-12b -> TASK-13. Advance only when that slice's direct targets are GREEN. No runtime completion is claimed by this plan.
+
+| Task | Scope | Direct GREEN gate |
+| --- | --- | --- |
+| TASK-11 | Project-qualified live/reference/cache state; DROP old snapshots; new project-keyed store with 50-entry cap and oldest eviction | project_switch_restores_own_reference_history, legacy_history_is_ignored_and_capped, TEST-reader-project-isolation, TEST-side-doc-pane-sessions |
+| TASK-12a | Navigation truth: searchable owner-scoped picker, Open beside, main Back/Forward, Copy path | ticket_document_picker_opens_beside, main_history_restores_ticket_document, TEST-reader-navigation-truth |
+| TASK-12b | Chrome: compact shared header, source labels, device details disclosure, fullscreen/Restore | compact_headers_preserve_document_identity, ticket_details_preference_survives_navigation, reader_fullscreen_restores_layout, TEST-reader-navigation-header |
+| TASK-13 | Source-safe promotion, dedicated repository reader route and direct-entry/Back/Close behavior; final visual-doc and baseline regression | close_main_promotes_ticket_document, close_main_promotes_repository_document, repository_reader_route_entry_and_exit, TEST-reader-promotion, TEST-reader-ux-contract |
+
+### Locked implementation contracts
+
+- TASK-11: ignore every legacy project+ticket snapshot, even if valid. No migration; initialize new-format reference state empty on first r12 use. Enforce 50 entries per project and adjust index/prune evicted metadata. Cover A/B/A, equal filenames, reopen and stale responses.
+- TASK-12a: main history is per viewer-open and clears on close; only reference sessions persist. Fresh direct reader entry has one main location and disabled main Back. One navigation authority handles picker, links, browser history and promotion. Copy resolves the actual displayed source on both panes.
+- TASK-12b starts only after navigation truth is GREEN; it binds to the existing controller rather than recreating history in chrome. Preserve source-based paths, key-template priority, Trace/Epic ownership, keyboard/touch and narrow-overlay access.
+- TASK-13 route is locked: push /prj/{sourceProject}/read?doc={encodedProjectRelativePath}. In-session Back restores the ticket URL/scroll; direct/reload opens single document mode with no active reference; Close replaces with the source /documents?file= URL. Existing Documents links keep opening the workspace. Full rationale and failure behavior are in architecture.md.
+- Route constants/builders belong to frontend/src/routes.ts; App.tsx stays declarative; ProjectRouteHandler/reader lifecycle owns state. Use existing path/auth/project services, not copied rules.
+- TASK-13 visual-doc gate: surface specs/Wireloom govern implementation. Review images are optional local-only pre-development aids, excluded from Git; retain warnings while used and delete them after implementation and UAT are complete.
+- Shared runtime files have one editing owner per sub-slice. TASK-1–TASK-10 remain baseline regression owners, not a replay of original implementation.
+
+## Historical baseline task plan
+
+The following plan records original task ownership. r12 changes above supersede old role exclusivity, bare-path sessions, tabs, floating history and width/position assumptions.
+
+
 **Source**: canonical architecture/tests/bdd state + `tasks.trace.md` for trace cross-checking
 
-## Scope Boundaries
+### Scope Boundaries
 
 - Delivery seam: `SmartLink` decides pane-vs-router delivery at click time only; classification, normalization, and flagging are untouched.
 - Pane: `TicketViewer/TicketSidePane.tsx` + `useSidePane.ts` own the session; nothing else holds pane truth.
@@ -10,7 +36,7 @@
 - E2E contract: `sidePaneSelectors` + `tests/e2e/ticket/side-doc-pane.spec.ts` (already RED).
 - Must not touch: `docs/CRs/MDT-249*` (user's parallel work), `DocumentsView/` internals (hand-off target only), `server/**` (no endpoint changes), `domain-contracts/**` (pre-existing lint debt stays).
 
-## Ownership Guardrails
+### Ownership Guardrails
 
 | Critical Behavior | Owner Module | Merge/Refactor Task if Overlap |
 |-------------------|--------------|-------------------------------|
@@ -20,7 +46,7 @@
 | Split modal geometry + scroll transfer | `TicketViewer/index.tsx` + css | N/A |
 | Document content endpoint usage | existing `/api/documents/content` | import-only; no second fetch path |
 
-## Constraint Coverage
+### Constraint Coverage
 
 | Constraint ID | Tasks |
 |---------------|-------|
@@ -33,7 +59,7 @@
 | C7 (missing links inert) | Task 1, Task 10 |
 | Edge-1..6 | Tasks 3, 5, 6, 9, 10 (unit closure) |
 
-## Milestones
+### Milestones
 
 | Milestone | BDD Scenarios (BR) | Tasks | Checkpoint | Observable Proof |
 |-----------|--------------------|-------|------------|------------------|
@@ -43,9 +69,9 @@
 | M3: survival + hand-off | BR-1.7, BR-1.8 | Task 7–8 | 2 scenario tests GREEN | `--grep "BR-1.7|BR-1.8"` |
 | M4: responsive + closure | BR-1.9 + all C/Edge | Task 9–10 | full suite GREEN; unit suite GREEN; regression suites GREEN | commands below |
 
-## Tasks
+### Tasks
 
-### Task 1: Document delivery context seam + SmartLink interception (M1)
+#### Task 1: Document delivery context seam + SmartLink interception (M1)
 
 **Skills**: mdt-frontend
 **Structure**: `frontend/src/components/SmartLink/documentDelivery.ts` (new)
@@ -61,7 +87,7 @@
 **Verify**: `bun test --isolate ./frontend/src/components/TicketViewer/TicketSidePane.test.tsx -t "documentDelivery"`
 **Done when**: unit delivery tests GREEN; SmartLink behavior without provider byte-identical.
 
-### Task 2: useSidePane session state machine (M1)
+#### Task 2: useSidePane session state machine (M1)
 
 **Skills**: mdt-frontend
 **Structure**: `frontend/src/components/TicketViewer/useSidePane.ts` (new)
@@ -77,7 +103,7 @@
 **Verify**: `bun test --isolate ./frontend/src/components/TicketViewer/TicketSidePane.test.tsx -t "useSidePane"`
 **Done when**: state-machine unit tests GREEN.
 
-### Task 3: Modal split tier + TicketSidePane component + pill + css (M1)
+#### Task 3: Modal split tier + TicketSidePane component + pill + css (M1)
 
 **Skills**: mdt-frontend
 **Structure**: `frontend/src/components/TicketViewer/TicketSidePane.tsx`, `ticket-side-pane.css` (new); `ui/Modal.tsx`, `ui/modal.css` (edit)
@@ -93,7 +119,7 @@
 **Verify**: `bun test --isolate ./frontend/src/components/TicketViewer/TicketSidePane.test.tsx -t "TicketSidePane|SidePanePill"`
 **Done when**: pane chrome unit tests GREEN (landmark, path, prose class, disabled bounds, error retention).
 
-### Task 4: Integrate into TicketViewer with scroll transfer (M1 — checkpoint)
+#### Task 4: Integrate into TicketViewer with scroll transfer (M1 — checkpoint)
 
 **Skills**: mdt-frontend, playwright-cli
 **Structure**: `frontend/src/components/TicketViewer/index.tsx`, `ticket-viewer.css`
@@ -110,7 +136,7 @@
 **Verify**: `bun run test:e2e -- tests/e2e/ticket/side-doc-pane.spec.ts --grep "BR-1.1|BR-1.2"`
 **Observe**: E2E output shows the two M1 tests passing; all other pane tests still RED (expected).
 
-### Task 5: History back/forward with scroll restore (M2)
+#### Task 5: History back/forward with scroll restore (M2)
 
 **Skills**: mdt-frontend
 **Scope**: wire back/forward controls to the hook; apply per-entry scroll on path change; disabled states with `cursor-not-allowed`.
@@ -123,7 +149,7 @@
 **Makes GREEN (Behavior)**: `pane_back_forward_restores_scroll` → e2e spec
 **Verify**: `bun run test:e2e -- tests/e2e/ticket/side-doc-pane.spec.ts --grep "BR-1.3"`
 
-### Task 6: Esc chain, hide/reveal pill, discard (M2 — checkpoint)
+#### Task 6: Esc chain, hide/reveal pill, discard (M2 — checkpoint)
 
 **Skills**: mdt-frontend
 **Scope**: pane-visible Escape listener → hide; `closeOnEscape={!trace && !paneVisible}`; pill render conditions + reveal; × discard; focus returns (pill on hide); open/hide/discard live-region announcements.
@@ -136,7 +162,7 @@
 **Makes GREEN (Behavior)**: `escape_hides_pane_pill_reveals`, `pane_close_discards_session`, `escape_with_pane_hidden_closes_modal` → e2e spec
 **Verify**: `bun run test:e2e -- tests/e2e/ticket/side-doc-pane.spec.ts --grep "BR-1.4|BR-1.6|BR-1.10"`
 
-### Task 7: Session survives ticket-column swaps (M3)
+#### Task 7: Session survives ticket-column swaps (M3)
 
 **Skills**: mdt-frontend
 **Scope**: verify/fix that ticket-link swaps (route param change) keep the viewer mounted with pane state; no state reset on ticket prop change.
@@ -149,7 +175,7 @@
 **Makes GREEN (Behavior)**: `ticket_link_swaps_column_pane_survives` → e2e spec
 **Verify**: `bun run test:e2e -- tests/e2e/ticket/side-doc-pane.spec.ts --grep "BR-1.7"`
 
-### Task 8: Open-in-Documents hand-off (M3)
+#### Task 8: Open-in-Documents hand-off (M3)
 
 **Skills**: mdt-frontend
 **Scope**: pane header control navigates to the current document's Documents URL (from the normalizer's webHref shape); closes the modal.
@@ -162,7 +188,7 @@
 **Makes GREEN (Behavior)**: `handoff_opens_documents_view` → e2e spec
 **Verify**: `bun run test:e2e -- tests/e2e/ticket/side-doc-pane.spec.ts --grep "BR-1.8"`
 
-### Task 9: Narrow-viewport overlay variant (M4)
+#### Task 9: Narrow-viewport overlay variant (M4)
 
 **Skills**: mdt-frontend, playwright-cli
 **Scope**: `<1100px` media query: pane absolute overlay inside modal body; `‹ Ticket` return control (hidden ≥1100px); live crossing without session loss.
@@ -175,7 +201,7 @@
 **Makes GREEN (Behavior)**: `narrow_viewport_pane_overlays` → e2e spec
 **Verify**: `bun run test:e2e -- tests/e2e/ticket/side-doc-pane.spec.ts --grep "BR-1.9"`
 
-### Task 10: Full green + regression + docs sync (M4 — final)
+#### Task 10: Full green + regression + docs sync (M4 — final)
 
 **Skills**: playwright-cli
 **Scope**: full unit suite GREEN; full pane E2E GREEN; regression: existing doc-link specs (`smartlink-doc-refs`, `inline-code-doc-links`), subdoc specs, `detail.spec.ts`; `MODALS.md` gains the split layout mode; `ticket-side-doc.spec.md`/`interactions.md` final sync check; `ticket-viewer.spec.md` verification anchors refreshed.
@@ -194,7 +220,7 @@ bun run validate:ts && bun run lint
 ```
 **Observe**: `bun run test:e2e -- tests/e2e/ticket/side-doc-pane.spec.ts` → 9/9 passed.
 
-## Post-Implementation
+### Post-Implementation
 
 - [x] No duplication (grep check — single delivery seam, single session owner, single prose variant)
 - [x] Scope boundaries respected (MDT-249 untouched; server/shared/domain untouched)
@@ -210,6 +236,6 @@ directory too deep (`../../docs/x.md` from a subdoc doubles `docs/`); corrected 
 stacked over the pane × in split mode; fixed with `.modal__close--split` scoping
 the close to the ticket column (spec rule: modal chrome never overlays the pane).
 
-## Post-Verify Fixes (recorded by `mdt:implement`)
+### Post-Verify Fixes (recorded by `mdt:implement`)
 
 - None yet.

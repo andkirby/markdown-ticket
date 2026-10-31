@@ -1,107 +1,80 @@
-# Ticket Side Doc - Interactions
+# Ticket Side Doc — Interactions
 
-Durable interaction contract for the ticket viewer's side reading pane: state machine, link routing, history/scroll, and the Esc chain (MDT-248).
+Canonical reference-session lifecycle, routing and project boundaries for MDT-248 UAT r12. **Approved target; implementation pending.**
 
-Related specs: `ticket-side-doc.spec.md` (composition, layout, states), `ticket-viewer.spec.md` (host modal)
-Related ticket: `docs/CRs/MDT-248-ticket-side-doc.md`
-Reference implementation: `designs/ticket-side-doc/` (Alpine POC; its state model is normative)
+Related: [reference composition](ticket-side-doc.spec.md), [mockups](ticket-side-doc.mockups.md), [main reader interactions](ticket-viewer.interactions.md), [UAT brief](../../CRs/MDT-248/uat.md).
 
-## Owns
+## Owns / does not own
 
-- The pane session state machine (closed / open / hidden) and every transition into and out of it.
-- The routing table: which link kinds open in the pane, which swap the ticket column, which leave the app.
-- Per-pane history semantics (browser-tab model) and scroll memory.
-- The Esc chain ordering inside the ticket modal.
-- Session lifetime rules (what survives a ticket hop, what dies with the modal).
+Owns project-scoped reference closed/open/hidden states, its own browser-style history/scroll, link delivery and survival. Main navigation, details, fullscreen and promotion composition are host-owned. Link classification, permissions, parser, graph internals and modal primitives are unchanged owners.
 
-## Does Not Own
+## State and source model
 
-- Link classification and missing-target flagging — `linkProcessor` / SmartLink config.
-- Modal base keyboard behavior (focus trap, body scroll lock) — `MODALS.md`.
-- `#trace` shell open/close (orthogonal; trace shell keeps its own Esc behavior when open).
-- Sub-document tab navigation — `useTicketDocumentNavigation`.
+One active reference session belongs to the reader's selected project. Retain independent sessions for other projects without rendering or loading them as the current project's content.
+Each reference location identifies owning project, canonical relative file, ticket owner if any, document kind and anchor. History entries retain title and scroll using this full identity. A filename/path string alone is insufficient.
+Closed means no session; open means visible; hidden means a session retained behind the reveal affordance. Main ticket hops within the same project never retarget a reference or its picker.
 
-## State machine
+## Transitions
 
-| # | From | Event | To | Effects |
-|---|------|-------|-----|---------|
-| 1 | closed | document link clicked | open | pane reveals, modal widens, doc loads, history = [doc], focus → pane header |
-| 2 | open | document link clicked (different doc) | open | push onto history (forward stack truncated), pane navigates |
-| 3 | open | document link clicked (same doc) | open | no-op navigation (no duplicate history entry) |
-| 4 | open | Esc / `‹ Ticket` (overlay) | hidden | pane tucked, pill appears; session kept |
-| 5 | hidden | document link clicked | open | pane re-reveals with the new doc (state 2 semantics from the kept session) |
-| 6 | hidden | pill clicked | open | pane re-reveals on the current doc, scroll restored |
-| 7 | open or hidden | `×` on pane | closed | session discarded (doc, history, scroll) AND its per-ticket snapshot cleared, modal narrows |
-| 8 | any | ticket link clicked | unchanged | ticket column swaps in place; pane state and session untouched |
-| 9 | any | modal closes | closed* | the in-modal session ends tucked (pill semantics); a per-ticket snapshot persists and the ticket reopens with the pill — see Session memory |
+| From | Event | To / effect |
+| --- | --- | --- |
+| Closed | Open beside / repository link | Open; source-qualified target loads and initializes history |
+| Open | Different reference selected | Open; capture current scroll, push source-qualified entry, truncate Forward |
+| Open/hidden | Same current reference selected | Open/reveal/focus without duplicate entry |
+| Open | Escape / Return to main | Hidden; preserve current document, history/index/scroll |
+| Hidden | Reveal pill | Open; same source/position |
+| Open/hidden | Close right pane | Closed; clear active project's reference snapshot only |
+| Any | Same-project main ticket link | Reference state unchanged; main changes independently |
+| Any | Main project A -> B | Save/deactivate A; select B's session or empty; A paths cannot load under B |
+| Any | Close viewer | Save current project session; reopening restores it hidden |
+| Open | Close left pane / Use as main | Host promotes reference, consumes reference slot/pill and preserves source/scroll |
 
-Invariants:
+Promotion does not erase other projects' sessions. Restore is hidden; visibility is not a device preference. Project navigation must finish selecting its own state before fetching/rendering.
+Legacy history policy is locked: DROP/ignore all old {projectId,ticketKey} snapshots, including valid ones; no migration and no path-owner inference. First r12 use starts with empty new-format state. Use a distinct project-keyed store with at most 50 reference entries per project; evict oldest, adjust index and prune evicted title/scroll keys. A new project never inherits another project's entries. Main history is per viewer-open only and clears on close; reference sessions alone persist.
+Corrupt/unavailable new-format storage degrades safely. Reference history is browser-local reading state; it is independent of the device-wide details preference.
 
-- A document-link click **always** reveals the pane (follow-always). There is no mode in which document links navigate to the Documents view instead; the only per-doc alternative is the explicit `Open in Documents ↗` hand-off.
-- Esc never discards a session; only `×` does.
-- The pane never hosts a ticket; the ticket column never hosts a repo document.
+## Link routing and explicit picker intent
 
-## Link routing
+| Input | Delivery |
+| --- | --- |
+| Ordinary repository DOCUMENT link in either pane | Reference, using source-qualified resolution |
+| Ticket/epic key or ticket-file reference in either pane | Main ticket/document; same-project reference survives, project change selects its own session |
+| Current ticket subdocument name in main picker | Main document selection |
+| Current ticket subdocument name in reference picker | Reference document selection |
+| Explicit Open {document} beside | Reference, including internal ticket documents; main unchanged |
+| Known-missing target | Flagged/inert; no new pane |
+| External link | Existing browser-tab behavior |
+| In-page anchor | The current document region |
+| Open in Documents | Full Documents workspace on the displayed document's source project/file |
 
-| Link kind (linkProcessor) | Delivered to | Notes |
-|---------------------------|--------------|-------|
-| DOCUMENT | the pane | including links inside pane documents (recursion stays in the pane) |
-| DOCUMENT, known-missing | not clickable | flagged rendering, identical to today — pane never opens |
-| TICKET / CROSS_PROJECT | ticket column swap | plain keys and ticket URLs as today, plus ticket-file paths authored root-style from any document (`{ticketsPath}/{KEY}[-slug].md`, or `{ticketsPath}/{KEY}/{subdoc}.md`) — the ticket is the entity, not a documents artifact (UAT r9) |
-| sub-document ref | sub-document tab selection | current tab behavior |
-| EXTERNAL | browser tab | unchanged |
-| in-page anchor | current region scroll | applies to whichever region contains the link |
+Ticket-file classification remains authoritative for normal links, including root-style ticket/subdoc refs from repository prose. Explicit Open beside is a user-selected document destination, not a rewrite of global ticket-link classification.
+Reference ticket picker scope is its source ticket. Source-based relative link resolution never changes because main navigated elsewhere. A reference click never creates a third pane.
 
-## History and scroll
+## History, copy and async isolation
 
-- One history stack for the pane (browser-tab model): entries are document refs; a new visit truncates the forward stack; consecutive duplicates are not pushed.
-- Back/forward live in a floating chip over the top-left of the pane body (not in the header): half transparent at rest, fully opaque on hover/focus; the content scrolls under it. The header row carries title, mono path + copy control, hand-off, and close.
-- Back/forward enabled state reflects stack bounds; disabled uses `cursor-not-allowed` (tooltip survives).
-- **History menu (UAT r7)**: right-clicking back (or forward) opens that direction's entries as a jump menu — back lists the past nearest-current first, forward lists the future in order. Rows follow the documents nav-tree format: document title over mono file path (titles come from the session's last-known map, humanized basename fallback — no refetch). Activating an entry jumps to it **without truncating the stack** (both directions stay reachable); the pane's scroll is captured before the jump. The menu is the vendored Radix context menu (`ui/context-menu.tsx`); Escape closes it before the Esc chain continues, and an outside click closes the menu only — while the menu is open the page's pointer events are suppressed and the click lands on `<html>`, which the modal's outside-click handling ignores (UAT r10).
-- Scroll position is captured per history entry on every navigation and restored on back/forward and on hide/reveal.
-- Hiding the pane captures scroll; revealing restores it. Discarding clears it.
-- Rapid navigation must not corrupt the stack: navigation applies to the committed top of stack only.
+- Reference Back/Forward sits in its pinned toolbar and changes only its stack. Forward truncates on a new visit; consecutive duplicate identities do not push.
+- Existing right-click history jump menus retain title over source path, nearest past first, and non-truncating jump semantics. Closing/dismissing a portal menu must not close the viewer behind it.
+- Capture scroll at navigation/hide/close boundaries; restore it on history/reveal. Main history is separate.
+- Copy, hand-off, link normalization, HTML sandbox, fetching, title/scroll maps, cache and error fallback all use owning project/file.
+- On A -> B -> A, each project's index, history titles, content and scroll resume independently. Equal relative paths must still show different project content.
+- Cancel/ignore old-context results and callbacks before applying destination state. Old requests/cache hits may not write another project's visible state or persisted snapshot.
+- Rapid navigation follows committed visit order. A failed request retains loaded content/source with a clear failed-target error; no header/content owner mismatch or toast loop.
+- Right Close clears only the active project. Global Close retains it hidden for reopen. Escape hides without destructive persistence changes.
 
-## Esc chain
+## Divider
 
-Ordered, one Esc press per step:
-
-1. Trace shell open → closes shell (existing behavior, unchanged).
-2. Pane visible → hides pane (session kept).
-3. Otherwise → closes the ticket modal (existing behavior).
-
-Steps compose: Esc walks outward exactly one layer per press.
-
-## Divider (UAT r2)
-
-- Drag (pointer), ArrowLeft/ArrowRight (±32px, focusable separator), double-click resets to the CSS default.
-- Range: neither column below 340px (`clampTicketColumnWidth` in `splitLayout.ts`); the smaller bound wins when the body cannot fit two minimums.
-- Persisted (UAT r3): the position is stored as a percent of the split body width in localStorage — `mdt-settings-ticket-side-pane-split-ratio` (config/sidePaneLayout.ts). Committed on drag end and each arrow nudge; cleared by the reset (double-click); restored the first time the pane becomes visible in a later modal. Survives hide/reveal, ticket hops, and modal close.
-- While dragging: global col-resize cursor, selection suppressed (`ticket-side-pane--resizing` body class); the modal close × tracks the width via `--ticket-col-width`.
-- Hidden below the split breakpoint (no divider in overlay mode).
-
-## Session memory (UAT r7)
-
-- **Where**: localStorage, key `mdt-settings-ticket-side-pane-sessions` (config/sidePaneSessions.ts) — one JSON record per `{projectId, ticketKey}` holding `{hist, hi, scrolls, titles, updatedAt}`. Visibility is never stored.
-- **Restore**: opening a ticket with no live session and a remembered snapshot restores it **hidden** — the pill names the document; reveal restores history and scroll. The reading context belongs to the ticket where it started (a ticket hop keeps the live session; it does not claim the new ticket's slot).
-- **Obsolescence control**: FILO cap of **5 tickets**, most recently used first — saving re-touches a ticket to the front and evicts the oldest beyond the cap, so stale data is bounded without sweeps. Forward-stack truncation prunes orphaned scroll/title keys at save time; deleted documents degrade to the Edge-2 failure UX on restore.
-- **Clearing**: the pane `×` discards the session and clears that ticket's snapshot. Nothing else removes records except the cap.
-
-## Session lifetime
-
-- Survives: ticket hops in the ticket column (state 8), sub-document tab switches, pane hide/reveal cycles, viewport resize across the split/overlay breakpoint, theme and density changes, and modal close via the per-ticket snapshot (Session memory).
-- Dies: `×` discard — which also clears the snapshot. A modal close alone never destroys reading state anymore (state 9*).
+Pointer drag, ArrowLeft/Right +/-32px and double-click reset remain. Keep both columns >=340px in split; overlay below 1100px. Persist the percentage as an independent layout preference. The global viewer close now belongs to the shared header rather than following the dragged main width.
+Capture/restore reading positions on split/overlay/fullscreen transitions; never lose source context on resize.
 
 ## Keyboard and focus
 
-- Pane open: focus moves to the pane header (first enabled control). Tab order flows ticket column → pane header (copy path, hand-off, close) → floating history chip (back, forward) → pane body links.
-- History menu open (right-click): arrow keys move within the menu, Escape closes it (one press, menu only), Enter/click activates the entry; focus returns to the trigger.
-- Pane hide via Esc: focus moves to the session pill (it names the tucked document).
-- Pane discard via `×`: focus returns to the element that opened the session if still present; otherwise the modal close control.
-- All controls are standard tab stops; roving tabindex is not used. Keyboard-only `:focus-visible` rings throughout.
+One Escape per active layer: picker/history menu, Trace shell, visible reference hide, reader close. Fullscreen uses explicit Restore.
+Open focuses source-naming reference toolbar; hide focuses pill; reference discard returns focus to main/origin; promotion focuses promoted main and announces it.
+In overlay mode Return to main hides the reference and Use as main promotes it; the covered main/global close is not exposed over the reference. Reference Close is the only visible close on that pane surface.
+Buttons use standard tab stops and focus-visible rings. Disabled history bounds remain tooltip-accessible; retained portal exemptions prevent an outside menu dismissal from closing the reader.
 
-## Screen reader announcements
+## Announcements and failures
 
-- Pane opens: announce `Opening {document title} beside ticket`.
-- Pane hides: announce `{document title} tucked — show it from the reading pill`.
-- Pane discarded: announce `Reading session closed`.
+Announce Opening {title} beside main, {title} tucked, Reading session closed, and source-labelled promotion/navigation. Include owning ticket/project where needed.
+Keep the existing error boundary and first-load/replacement-failure behavior. Deleted saved documents remain an explicit error, not a fallback to another project's identically named file.
+The sf-api-under-MDT history defect is recorded in UAT r12; store unit tests alone do not prove these live-context rules. Browser and asynchronous project-isolation acceptance remains pending.
