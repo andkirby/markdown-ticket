@@ -1,13 +1,13 @@
 ---
 code: MDT-266
 creationId: c3954a0e-43db-4b9b-9a32-184a894964f4
-status: In Progress
+status: Implemented
 dateCreated: 2026-10-29T12:04:12.254Z
 type: Architecture
 priority: High
 phaseEpic: MDT-228
 relatedTickets: MDT-082,MDT-105,MDT-111
-implementationNotes: PATCH_READY: rounds1-2 complete.21obsolete internal files/10unused watcher members retired;0structural exceptions. Whole Knip and all7package linters pass. Parent normal-hook source checkpoint created; final evidence in docs/CRs/MDT-266/execution/round2/result.md. Source accepted by Astra. Awaiting human review.
+implementationNotes: Implemented in 74d42c3c (rounds 1-2) — 21 obsolete internal files and 10 unused watcher members retired; 0 structural exceptions. Whole-repo Knip and all 7 package linters pass. Parent normal-hook source checkpoint created; final evidence in docs/CRs/MDT-266/execution/round2/result.md. Source accepted by Astra; human review approved.
 ---
 
 # Modularize backend capabilities and unify application composition
@@ -103,7 +103,7 @@ implementationNotes: PATCH_READY: rounds1-2 complete.21obsolete internal files/1
 - [x] RF-7: Changed owner documents describe verified implementation; target proposals remain separate until their slices land.
 - [x] RF-8: Capability HTTP adapters are owned by `server/modules/<capability>/`; cross-capability consumers use public operations instead of controller service getters. Round2 retires obsolete internal HTTP paths and preserves meaningful public shared boundaries.
 
-Implementation and local verification are complete. Parent accepted the patch after Astra accepted both source and report. The [execution result](MDT-266/execution/result.md) maps every criterion to evidence and records the existing lint/decoder, server-test handle and intermittent 501 qualifications. The ticket remains In Progress for human review; PATCH_READY is not deployment or whole-repository readiness.
+Implementation and local verification are complete. Parent accepted the patch after Astra accepted both source and report. The [execution result](MDT-266/execution/result.md) maps every criterion to evidence and records the existing lint/decoder, server-test handle and intermittent 501 qualifications. Human review has since approved the implementation and the ticket is Implemented (landed as 74d42c3c); PATCH_READY denoted patch acceptance, not deployment or whole-repository readiness.
 
 The [round2 plan](MDT-266/execution/round2/plan.md), [baseline](MDT-266/execution/round2/baseline.md) and [compatibility inventory](MDT-266/execution/round2/compatibility-inventory.md) govern the subsequent cleanup. Its result records the final Knip/lint status, caller migration and commit outcome; first-round evidence remains historical.
 
