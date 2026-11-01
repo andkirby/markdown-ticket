@@ -469,6 +469,7 @@ test('MDT-252 style guide renders agreed badge flow in both themes', async ({ pa
   const section = page.locator('.external-reference-demo')
   await expect(section.locator('.ticket-card')).toHaveCount(3)
   await expect(section.locator(externalReferenceSelectors.group)).toHaveCount(6)
+  await expect.poll(() => section.locator('img.external-reference__icon').first().evaluate(element => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
   for (const theme of ['light', 'dark']) {
     await page.evaluate(theme => document.documentElement.classList.toggle('dark', theme === 'dark'), theme)
     const keySpacing = await section.locator('.external-reference').first().evaluate(element => {

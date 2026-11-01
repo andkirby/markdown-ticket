@@ -18,6 +18,7 @@ Guidance for agents working in this directory.
 | `lint-changed.sh` | eslint on changed files | `lint:changed*` |
 | `smart-server.sh` | Dev server lifecycle | `smart-server*`, `DEBUG.md` |
 | `inspect-config.ts` | Where each setting lives | `inspect:config*`, `docs/CONFIG_INSPECTION.md` |
+| `build-styleguide.ts` | Bundle live production badge examples as classic JS and CSS for sandboxed/raw HTML preview | `build:styleguide`, `build`, `dev`, `dev:lan` |
 | `tests-report.sh` | FAIL-file test report | `DEBUG.md` |
 | `parse-css.mjs`, `setup-css-gate.sh` | CSS syntax pre-commit gate | lefthook |
 | `install-git-hooks.sh`, `githooks/` | Hook installation | `hooks:install` |

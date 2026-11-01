@@ -1,5 +1,6 @@
 import type { TrackerKindValue } from '@mdt/domain-contracts'
 import { Github, Gitlab, Link } from 'lucide-react'
+import jiraIcon from '../../../public/icons/trackers/jira.svg?url'
 
 export function TrackerIcon({ kind }: { kind?: TrackerKindValue }) {
   if (kind === 'github')
@@ -7,6 +8,6 @@ export function TrackerIcon({ kind }: { kind?: TrackerKindValue }) {
   if (kind === 'gitlab')
     return <Gitlab className="external-reference__icon" aria-hidden="true" />
   if (kind === 'jira')
-    return <img src="/icons/trackers/jira.svg" className="external-reference__icon" alt="" aria-hidden="true" draggable={false} />
+    return <img src={jiraIcon} className="external-reference__icon" alt="" aria-hidden="true" draggable={false} />
   return <Link className="external-reference__icon" aria-hidden="true" />
 }

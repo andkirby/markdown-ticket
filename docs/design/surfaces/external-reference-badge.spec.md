@@ -59,6 +59,6 @@ All shortening is display-only. Never infer configuration from visible tickets o
 
 - Existing owners: `TicketAttributeTags.tsx`, `Badge/RelationshipBadge.tsx`, `QuickSearch/QuickSearchResults.tsx`, `TicketAttributes.tsx`.
 - Reusable owner: `frontend/src/components/Badge/ExternalReferenceBadges.tsx`; link/label rendering lives in `ExternalReferenceLink.tsx`, disclosure behavior in `ExternalReferencePopover.tsx`, and display-only splitting in `referenceLabel.ts`.
-- The styleguide mounts these production components through `frontend/src/styleguide/externalReferences.tsx`. Open `/src/styleguide.html` through Vite for live examples. Direct-file viewing and MDT raw preview load relative static CSS and retain an explicit live-demo fallback, without requesting uncompiled TSX or changing preview isolation.
+- The styleguide mounts these production components through `frontend/src/styleguide/externalReferences.tsx`. Vite loads source modules; raw/file/MDT preview loads the browser-ready IIFE and compiled app CSS emitted by `bun run build:styleguide` into ignored `frontend/src/styleguide/dist/`. Normal builds and frontend startup generate the assets; development watches source changes. Preview keeps the same sandbox and directory-scoped asset policy. Jira icons are bundled from the canonical SVG, without out-of-scope image requests.
 - Semantic contract: `Badge/badge.css`, `THEME.md`, `BADGE_ARCHITECTURE.md`.
 - Browser acceptance: `tests/e2e/ticket/external-references.spec.ts` and `tests/e2e/quick-search/external-references.spec.ts`.

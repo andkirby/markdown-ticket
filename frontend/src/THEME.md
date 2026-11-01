@@ -245,12 +245,13 @@ the external-reference variant. The split-chip board-jump action is a separate
 control zone and retains its explicit target size.
 
 These spacing and hit-target values are mode-independent and inherited in both
-themes. The standalone styleguide uses the real `.badge` class for chip metrics. Its
-external-reference examples mount the production React components through Vite
-at `/src/styleguide.html`; do not duplicate their markup or interaction logic.
-Direct-file viewing and MDT's raw HTML preview load the relative token/component
-styles for static sections. React demos require Vite and show an explicit
-fallback in raw preview; preview must not request uncompiled TSX modules.
+themes. The styleguide renders the production React components in Vite, direct
+file viewing and MDT's sandboxed HTML preview. `bun run build:styleguide` emits
+classic JavaScript and compiled app CSS into the ignored
+`frontend/src/styleguide/dist/` directory. `bun run build` generates these assets;
+`bun run dev` generates them before startup and watches for source changes.
+Preview requests only these directory-scoped browser assets, without uncompiled
+TSX, network/API access, extra sandbox permissions or duplicate demo markup.
 
 ---
 
