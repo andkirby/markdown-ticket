@@ -127,7 +127,7 @@ Drives the priority icon glyph color and the critical/high card accent stripe.
 | `--pad-y` / `--pad-x` | `6px` / `8px` | `10px` / `12px` | `14px` / `16px` | SPACE (padding & gaps) |
 | `--sz-icon` | `16px` — fixed lucide glyph size beside the ticket key (not density-driven) ||| — |
 
-**A11y floor (MDT-236):** content text consuming `--fs-xs` must wrap it as `clamp(11px, var(--fs-xs), 2rem)` — no content text below 11px at any axis combination, and interactive targets keep a 24px minimum (derive paddings with `calc()` factors that hold the floor at tight·compact).
+**A11y floor (MDT-236):** content text consuming `--fs-xs` must wrap it as `clamp(11px, var(--fs-xs), 2rem)` — no content text below 11px at any axis combination. Controls use a 24px minimum target; inline badge links and overflow controls follow the compact content-width contract in Spacing below.
 
 **Surface classification (MDT-236):** content = a surface whose primary job is presenting ticket/document data; chrome = controls, navigation furniture, containers. Chrome verdicts are density-immune by rule, not case-by-case taste.
 
@@ -223,7 +223,7 @@ Choose spacing by role:
 | `--gap-lg` | 24px | Major section separation |
 | `--badge-padding-block` | 2px | Visible badge inset above/below content |
 | `--badge-padding-inline` | 6px | Visible badge inset before/after content |
-| `--sz-target-min` | 24px | Split-chip action target and overflow-button minimum width |
+| `--sz-target-min` | 24px | Split-chip board-jump action target |
 
 The parent owns spacing between siblings via `gap`; children must not add
 margins for the same separation. Padding belongs to the component's visible
@@ -236,8 +236,12 @@ typography and icon sizing. Their links fit their key text and use normal hit
 areas; only the parent badge's gap separates keys. No tracker-specific negative
 margins, minimum link widths or expanded link hit areas may alter that geometry.
 This shared layout supersedes MDT-252's original 24px link-target rule.
-Overflow buttons keep their minimum width; variant colors and wrapping remain
-owned by the external-reference variant.
+External-reference and relationship overflow controls share one content-width
+style: no minimum width, margin, padding or filled background, and full inherited
+badge typography. Their parent owns separation; hover/press underline the text
+and keyboard focus stays outlined. Variant colors and wrapping remain owned by
+the external-reference variant. The split-chip board-jump action is a separate
+control zone and retains its explicit target size.
 
 These spacing and hit-target values are mode-independent and inherited in both
 themes. The standalone styleguide uses the real `.badge` class for chip metrics;

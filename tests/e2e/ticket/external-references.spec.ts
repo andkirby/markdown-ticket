@@ -31,6 +31,14 @@ function badgeGeometry(root: Element) {
   }
 }
 
+function overflowGeometry(element: Element) {
+  const range = document.createRange()
+  range.selectNodeContents(element)
+  const style = getComputedStyle(element)
+  const badge = getComputedStyle(element.closest('.badge')!)
+  return { width: element.getBoundingClientRect().width, textWidth: range.getBoundingClientRect().width, padding: style.padding, margin: style.margin, font: style.font, badgeFont: badge.font, background: style.backgroundColor }
+}
+
 function referenceHitChecks(links: Element[]) {
   return links.map((link) => {
     const rect = link.getBoundingClientRect()
@@ -154,6 +162,11 @@ test.describe('MDT-252 external references', () => {
     await expect(client.locator(externalReferenceSelectors.detailsTrigger)).toHaveCount(0)
     const trigger = group.locator(externalReferenceSelectors.detailsTrigger)
     await expect(trigger).toHaveText('+2')
+    const overflow = await trigger.evaluate(overflowGeometry)
+    expect(overflow.width).toBeCloseTo(overflow.textWidth, 1)
+    expect(overflow).toMatchObject({ padding: '0px', margin: '0px', font: overflow.badgeFont, background: 'rgba(0, 0, 0, 0)' })
+    await trigger.hover()
+    expect(await trigger.evaluate(element => getComputedStyle(element).backgroundColor)).toBe(overflow.background)
     await trigger.click()
     const details = page.locator(externalReferenceSelectors.details)
     const hidden = details.locator(externalReferenceSelectors.link)
@@ -179,11 +192,13 @@ test.describe('MDT-252 external references', () => {
     await page.keyboard.press('Enter')
     await expect(page.locator(externalReferenceSelectors.details)).toContainText('legacy:OPS-7')
     await expect(page.locator(externalReferenceSelectors.details)).toContainText(/not configured|unavailable/i)
+    const panel = page.locator(externalReferenceSelectors.details)
+    const unavailableColor = await panel.locator(externalReferenceSelectors.unavailable).evaluate(element => getComputedStyle(element).color)
+    expect(await panel.locator('.external-reference__reason').evaluate(element => getComputedStyle(element).color)).toBe(unavailableColor)
     await page.keyboard.press('Escape')
     await expect(trigger).toBeFocused()
     const bounds = (await trigger.boundingBox())!
-    const hitTop = bounds.y - (Math.max(24, bounds.height) - bounds.height) / 2
-    await page.mouse.click(bounds.x + bounds.width / 2, hitTop + 0.5)
+    await page.mouse.click(bounds.x + bounds.width / 2, bounds.y + 0.5)
     await expect(page.locator(externalReferenceSelectors.details)).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(trigger).toBeFocused()
@@ -459,6 +474,11 @@ test('MDT-252 style guide renders agreed badge flow in both themes', async ({ pa
     const arrowSize = await arrow.evaluate(element => ({ width: element.getBoundingClientRect().width, font: Number.parseFloat(getComputedStyle(element).fontSize) }))
     expect(arrowSize.width).toBeCloseTo(arrowSize.font * 0.75, 1)
     expect(await arrow.locator('path').evaluateAll(paths => paths.map(path => path.getAttribute('d')))).toEqual(['M15 3h6v6', 'M10 14 21 3', 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'])
+    for (const trigger of await section.locator('.external-reference__more').all()) {
+      const overflow = await trigger.evaluate(overflowGeometry)
+      expect(overflow.width).toBeCloseTo(overflow.textWidth, 1)
+      expect(overflow).toMatchObject({ padding: '0px', margin: '0px', font: overflow.badgeFont, background: 'rgba(0, 0, 0, 0)' })
+    }
     await section.screenshot({ path: testInfo.outputPath(`styleguide-external-${theme}.png`) })
     await page.locator('.search-reference-demo').screenshot({ path: testInfo.outputPath(`styleguide-search-metadata-${theme}.png`) })
   }

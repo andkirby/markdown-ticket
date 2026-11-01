@@ -104,6 +104,13 @@ test.describe('Relationship badge elision (MDT-187)', () => {
     const trigger = relatedBadge.locator('button[aria-haspopup="dialog"]')
     await expect(trigger).toBeVisible()
     await expect(trigger).toContainText('+2')
+    const geometry = await trigger.evaluate(element => {
+      const range = document.createRange()
+      range.selectNodeContents(element)
+      return { width: element.getBoundingClientRect().width, textWidth: range.getBoundingClientRect().width, padding: getComputedStyle(element).padding, margin: getComputedStyle(element).margin, font: getComputedStyle(element).font, badgeFont: getComputedStyle(element.closest('.badge')!).font }
+    })
+    expect(geometry.width).toBeCloseTo(geometry.textWidth, 1)
+    expect(geometry).toMatchObject({ padding: '0px', margin: '0px', font: geometry.badgeFont })
 
     // No full codes visible in the inline portion
     await expect(relatedBadge).not.toContainText(`${projectCode}-`)

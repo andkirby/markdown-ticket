@@ -25,8 +25,7 @@
   .external-reference__link[data-reference-state="unavailable"] {
     color: var(--text-muted);
   }
-  .external-reference__link,
-  .external-reference__more {
+  .external-reference__link {
     display: inline-flex;
     align-items: center;
     min-inline-size: 0;
@@ -45,13 +44,21 @@
   .external-reference__instance {
     flex: none;
   }
-  .external-reference__more {
-    min-inline-size: var(--sz-target-min);
+  /* Inline overflow is badge content, not a separately sized button.
+     The badge owns its gap/padding; controls inherit its complete type style. */
+  .external-reference__more,
+  .relationship-badge__overflow {
+    display: inline-flex;
+    align-items: center;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    margin: 0;
     padding: 0;
     border: 0;
-    border-radius: var(--radius-xs);
     background: transparent;
-    justify-content: center;
+    color: inherit;
+    font: inherit;
+    text-decoration: none;
     cursor: pointer;
   }
   .external-reference__panel[data-external-references] {
@@ -64,10 +71,10 @@
     overflow-y: auto;
     padding: var(--gap-sm);
     background: var(--bg-elevated);
+    color: var(--primary-text);
     font-size: var(--fs-ui-sm);
   }
   .external-reference__heading {
-    padding-inline: var(--gap-xs);
     color: oklch(var(--foreground));
   }
   .external-reference__detail {
@@ -78,10 +85,6 @@
   }
   .external-reference__panel .external-reference__link {
     align-self: start;
-    justify-content: start;
-    padding-inline: var(--gap-xs);
-    font-size: var(--fs-ui-sm);
-    color: var(--primary-text);
   }
   .external-reference__panel .external-reference__key {
     white-space: normal;
@@ -89,22 +92,23 @@
     overflow: visible;
   }
   .external-reference__reason {
-    padding-inline: var(--gap-xs);
     color: var(--text-muted);
     overflow-wrap: anywhere;
   }
   .external-reference__link:focus-visible,
   .external-reference__more:focus-visible,
+  .relationship-badge__overflow:focus-visible,
   .external-reference__panel:focus-visible {
     outline: 2px solid var(--primary-text);
     outline-offset: 2px;
   }
-  .external-reference__more:active {
-    background: var(--state-press-bg);
+  .external-reference__more:active,
+  .relationship-badge__overflow:active {
+    text-decoration-line: underline;
   }
   @media (hover: hover) and (pointer: fine) {
-    .external-reference__more:hover {
-      background: var(--state-hover-bg);
+    .external-reference__more:hover,
+    .relationship-badge__overflow:hover {
       text-decoration: underline;
     }
   }
@@ -304,18 +308,6 @@
    * Badge dir is contracted (enforce-semantic-classes). Key rows reuse
    * .ticket-key; a.ticket-key:hover (ticket.css) already underlines.
    * ===================================================== */
-
-  .relationship-badge__overflow {
-    @apply ml-1 inline-flex items-center rounded px-1 leading-none;
-    @apply text-xs font-medium opacity-80;
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .relationship-badge__overflow:hover {
-      opacity: 1;
-      text-decoration-line: underline;
-    }
-  }
 
   .relationship-badge__panel {
     @apply w-auto min-w-[8rem] p-2;
