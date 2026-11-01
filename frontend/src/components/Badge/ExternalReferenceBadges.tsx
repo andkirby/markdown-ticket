@@ -2,7 +2,7 @@ import type { ExternalReference } from '@mdt/domain-contracts'
 import type { KeyboardEvent, ReactNode } from 'react'
 import { resolveExternalReferences } from '@mdt/shared/services/externalReferences'
 import { referenceMatchScore } from '@mdt/shared/services/ticket/referenceSearch'
-import { ArrowUpRight, CircleAlert } from 'lucide-react'
+import { CircleAlert, ExternalLink } from 'lucide-react'
 import { useId, useRef } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { INLINE_MAX } from './RelationshipBadge'
@@ -56,7 +56,7 @@ function ReferenceGroup({ references, query, renderLabel }: { references: Extern
         </span>
       )}
       {inline.map(({ reference, key }) => <ReferenceLink key={key} reference={reference} renderLabel={renderLabel} />)}
-      {hasLinks && <ArrowUpRight className="badge__icon badge__icon--indicator external-reference__arrow" aria-hidden="true" />}
+      {hasLinks && <ExternalLink className="badge__icon badge__icon--indicator external-reference__arrow" aria-hidden="true" />}
       {hasUnavailable && first.kind && <CircleAlert className="external-reference__icon" aria-label="Includes unavailable references" />}
       {details.length > 0 && (
         <Popover>

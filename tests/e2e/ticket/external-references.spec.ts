@@ -127,7 +127,7 @@ test.describe('MDT-252 external references', () => {
     const arrow = card.locator('svg.external-reference__arrow').first()
     const arrowSize = await arrow.evaluate(element => ({ width: element.getBoundingClientRect().width, font: Number.parseFloat(getComputedStyle(element).fontSize) }))
     expect(arrowSize.width).toBeCloseTo(arrowSize.font * 0.75, 1)
-    expect(await arrow.locator('path').evaluateAll(paths => paths.map(path => path.getAttribute('d')))).toEqual(['M7 7h10v10', 'M7 17 17 7'])
+    expect(await arrow.locator('path').evaluateAll(paths => paths.map(path => path.getAttribute('d')))).toEqual(['M15 3h6v6', 'M10 14 21 3', 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'])
     await expect(card.locator(externalReferenceSelectors.link).filter({ hasText: 'widgets#42' })).toBeVisible()
     await expect(card.locator(externalReferenceSelectors.detailsTrigger)).toHaveCount(0)
     await page.context().route('https://jira.example.test/**', route => route.fulfill({ body: '<h1>External issue</h1>', contentType: 'text/html' }))
@@ -458,7 +458,7 @@ test('MDT-252 style guide renders agreed badge flow in both themes', async ({ pa
     const arrow = section.locator('svg.external-reference__arrow').first()
     const arrowSize = await arrow.evaluate(element => ({ width: element.getBoundingClientRect().width, font: Number.parseFloat(getComputedStyle(element).fontSize) }))
     expect(arrowSize.width).toBeCloseTo(arrowSize.font * 0.75, 1)
-    expect(await arrow.locator('path').evaluateAll(paths => paths.map(path => path.getAttribute('d')))).toEqual(['M7 7h10v10', 'M7 17 17 7'])
+    expect(await arrow.locator('path').evaluateAll(paths => paths.map(path => path.getAttribute('d')))).toEqual(['M15 3h6v6', 'M10 14 21 3', 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'])
     await section.screenshot({ path: testInfo.outputPath(`styleguide-external-${theme}.png`) })
     await page.locator('.search-reference-demo').screenshot({ path: testInfo.outputPath(`styleguide-search-metadata-${theme}.png`) })
   }
