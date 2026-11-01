@@ -211,16 +211,35 @@ All headings: `font-semibold tracking-tight`
 
 ## Spacing
 
-Uses Tailwind's default spacing scale (4px base unit):
+App-owned CSS consumes the semantic tokens in
+[`styles/design-tokens.css`](styles/design-tokens.css) through bare `var()`.
+Choose spacing by role:
 
-| Token | Value |
-|-------|-------|
-| `1` | 4px |
-| `2` | 8px |
-| `3` | 12px |
-| `4` | 16px |
-| `6` | 24px |
-| `8` | 32px |
+| Token | Default | Role |
+|-------|---------|------|
+| `--gap-xs` | 4px | Icon/label pairs and badge internals |
+| `--gap-sm` | 8px | Related controls within a group |
+| `--gap-md` | 16px | Between groups and header elements |
+| `--gap-lg` | 24px | Major section separation |
+| `--badge-padding-block` | 2px | Visible badge inset above/below content |
+| `--badge-padding-inline` | 6px | Visible badge inset before/after content |
+| `--sz-target-min` | 24px | Minimum external-reference action hit target |
+
+The parent owns spacing between siblings via `gap`; children must not add
+margins for the same separation. Padding belongs to the component's visible
+surface and is independent of the parent's gap. Badge padding must not be
+derived from gap tokens: changing sibling spacing must not change badge insets.
+Content surfaces continue to use the density-driven `--pad-x` / `--pad-y` slots.
+
+External-reference links have a minimum inline size of `--sz-target-min` and
+expand their hit area vertically with a pseudo-element. Short keys therefore
+have space inside the link in addition to the badge's gap; that space preserves
+the 24px target required by MDT-252. Do not remove it or overlap adjacent hit
+areas to make the label appear tighter.
+
+These spacing and hit-target values are mode-independent and inherited in both
+themes. The standalone styleguide uses the real `.badge` class for chip metrics;
+it must not define a parallel padding/gap recipe.
 
 ---
 

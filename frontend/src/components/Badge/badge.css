@@ -35,7 +35,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-inline-size: 24px;
+    min-inline-size: var(--sz-target-min);
     max-inline-size: 100%;
     border: 0;
     border-radius: var(--radius-xs);
@@ -52,7 +52,7 @@
     content: "";
     position: absolute;
     inset-inline: 0;
-    inset-block: min(0px, calc((100% - 24px) / 2));
+    inset-block: min(0px, calc((100% - var(--sz-target-min)) / 2));
   }
   .external-reference__key {
     min-inline-size: 0;
@@ -145,15 +145,27 @@
      that the wrapper ships zero utilities; data-attribute rules below (0,2,0)
      override it per variant. */
   .badge {
-    @apply inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium;
-    @apply transition-colors;
+    /* Native declarations keep the standalone styleguide and app on the same
+       metrics; browsers cannot resolve Tailwind @apply in a raw stylesheet. */
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-xs);
+    padding-block: var(--badge-padding-block);
+    padding-inline: var(--badge-padding-inline);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--sz-icon);
+    font-weight: 500;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     color: oklch(var(--foreground));
-    border-radius: 4px;
+    border-radius: var(--radius-xs);
   }
 
   /* Inline glyph inside a badge (was h-3 w-3 on lucide icons in markup). */
   .badge__icon {
-    @apply h-3 w-3;
+    width: var(--fs-ui-sm);
+    height: var(--fs-ui-sm);
     flex: none;
   }
 
@@ -381,8 +393,9 @@
   .badge--split .badge__id {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 6px;
+    gap: var(--gap-xs);
+    padding-block: var(--badge-padding-block);
+    padding-inline: var(--badge-padding-inline);
   }
 
   /* Action zone: the VISIBLE box stays at the canonical badge height — the
@@ -397,7 +410,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 24px;
+    min-inline-size: var(--sz-target-min);
     align-self: stretch;
     position: relative;
     flex: none;
@@ -415,7 +428,8 @@
   .badge-action::after {
     content: "";
     position: absolute;
-    inset: -2px 0;
+    inset-inline: 0;
+    inset-block: min(0px, calc((100% - var(--sz-target-min)) / 2));
   }
 
   .badge-action:focus-visible {
