@@ -223,7 +223,7 @@ Choose spacing by role:
 | `--gap-lg` | 24px | Major section separation |
 | `--badge-padding-block` | 2px | Visible badge inset above/below content |
 | `--badge-padding-inline` | 6px | Visible badge inset before/after content |
-| `--sz-target-min` | 24px | Inline-action hit height and overflow-button minimum width |
+| `--sz-target-min` | 24px | Split-chip action target and overflow-button minimum width |
 
 The parent owns spacing between siblings via `gap`; children must not add
 margins for the same separation. Padding belongs to the component's visible
@@ -231,11 +231,13 @@ surface and is independent of the parent's gap. Badge padding must not be
 derived from gap tokens: changing sibling spacing must not change badge insets.
 Content surfaces continue to use the density-driven `--pad-x` / `--pad-y` slots.
 
-External-reference links fit their key text; only the parent badge's gap
-separates keys. They expand their hit area vertically to `--sz-target-min` with
-a pseudo-element, without expanding horizontally into adjacent keys. Short
-keys can have hit widths below 24px; this compact layout supersedes MDT-252's
-original 24px minimum-width rule. Overflow buttons keep the minimum width.
+External-reference badges inherit the shared badge padding, row/column gap,
+typography and icon sizing. Their links fit their key text and use normal hit
+areas; only the parent badge's gap separates keys. No tracker-specific negative
+margins, minimum link widths or expanded link hit areas may alter that geometry.
+This shared layout supersedes MDT-252's original 24px link-target rule.
+Overflow buttons keep their minimum width; variant colors and wrapping remain
+owned by the external-reference variant.
 
 These spacing and hit-target values are mode-independent and inherited in both
 themes. The standalone styleguide uses the real `.badge` class for chip metrics;

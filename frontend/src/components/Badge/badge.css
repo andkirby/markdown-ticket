@@ -18,41 +18,23 @@
 @layer components {
   .badge[data-external-reference] {
     flex-wrap: wrap;
-    /* Keep wrapped 24px targets separate, including hit-test pixel rounding.
-       Row spacing adds no height to a single-line badge. */
-    row-gap: calc(var(--gap-sm) + var(--gap-xs));
     max-inline-size: 100%;
     background: var(--bg-muted);
     color: var(--primary-text);
-    text-decoration: none;
   }
   .external-reference__link[data-reference-state="unavailable"] {
     color: var(--text-muted);
   }
   .external-reference__link,
   .external-reference__more {
-    position: relative;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     min-inline-size: 0;
     max-inline-size: 100%;
-    border: 0;
-    border-radius: var(--radius-xs);
-    background: transparent;
     color: inherit;
     font-size: inherit;
     line-height: inherit;
     text-decoration: none;
-  }
-  /* Match the shared badge's visual height. Expand hit areas vertically,
-     without reaching into adjacent keys, as badge-action does below. */
-  a.external-reference__link::after,
-  .external-reference__more::after {
-    content: "";
-    position: absolute;
-    inset-inline: 0;
-    inset-block: min(0px, calc((100% - var(--sz-target-min)) / 2));
   }
   .external-reference__key {
     min-inline-size: 0;
@@ -62,24 +44,13 @@
   }
   .external-reference__instance {
     flex: none;
-    font-weight: 500;
-  }
-  .external-reference__icon,
-  .external-reference__arrow {
-    flex: none;
-    inline-size: 1.35cap;
-    block-size: 1.35cap;
-  }
-  /* The Jira tile includes inset artwork; use the standard icon slot so its
-     mark stays legible beside line icons at every content density. */
-  img.external-reference__icon {
-    inline-size: var(--sz-icon);
-    block-size: var(--sz-icon);
-    /* The filled tile uses the same inset at its leading and block edges. */
-    margin-inline-start: calc(var(--gap-xs) * -1);
   }
   .external-reference__more {
     min-inline-size: var(--sz-target-min);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: transparent;
     justify-content: center;
     cursor: pointer;
   }
@@ -129,15 +100,11 @@
     outline-offset: 2px;
   }
   .external-reference__more:active {
-    background: var(--bg-subtle);
+    background: var(--state-press-bg);
   }
   @media (hover: hover) and (pointer: fine) {
-    /* Same underline-only feedback as relationship ticket links. */
-    a.external-reference__link:hover {
-      text-decoration-line: underline;
-    }
     .external-reference__more:hover {
-      background: var(--bg-subtle);
+      background: var(--state-hover-bg);
       text-decoration: underline;
     }
   }
@@ -164,7 +131,9 @@
   }
 
   /* Inline glyph inside a badge (was h-3 w-3 on lucide icons in markup). */
-  .badge__icon {
+  .badge__icon,
+  .external-reference__icon,
+  .external-reference__arrow {
     width: var(--fs-ui-sm);
     height: var(--fs-ui-sm);
     flex: none;

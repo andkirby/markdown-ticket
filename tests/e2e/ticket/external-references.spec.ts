@@ -31,23 +31,22 @@ function badgeGeometry(root: Element) {
   }
 }
 
-function expandedReferenceHitChecks(links: Element[]) {
+function referenceHitChecks(links: Element[]) {
   return links.map((link) => {
     const rect = link.getBoundingClientRect()
-    const extension = (Math.max(24, rect.height) - rect.height) / 2
     const ownsPoint = (y: number) => {
       const hit = document.elementFromPoint(rect.x + rect.width / 2, y)
       return hit === link || (hit !== null && link.contains(hit))
     }
     return {
-      top: ownsPoint(rect.top - extension + 0.25),
-      bottom: ownsPoint(rect.bottom + extension - 0.25),
+      top: ownsPoint(rect.top + 0.25),
+      bottom: ownsPoint(rect.bottom - 0.25),
       x: rect.x,
       y: rect.y,
       height: rect.height,
       rowGap: getComputedStyle(link.parentElement!).rowGap,
       inset: getComputedStyle(link, '::after').top,
-      lowerTarget: document.elementFromPoint(rect.x + rect.width / 2, rect.bottom + extension - 0.25)?.closest('a')?.getAttribute('href'),
+      lowerTarget: document.elementFromPoint(rect.x + rect.width / 2, rect.bottom - 0.25)?.closest('a')?.getAttribute('href'),
     }
   })
 }
@@ -130,8 +129,7 @@ test.describe('MDT-252 external references', () => {
     await page.context().route('https://jira.example.test/**', route => route.fulfill({ body: '<h1>External issue</h1>', contentType: 'text/html' }))
     const popup = page.waitForEvent('popup')
     const bounds = (await jira.boundingBox())!
-    const hitTop = bounds.y - (Math.max(24, bounds.height) - bounds.height) / 2
-    await page.mouse.click(bounds.x + bounds.width / 2, hitTop + 0.5)
+    await page.mouse.click(bounds.x + bounds.width / 2, bounds.y + 0.5)
     await (await popup).close()
     await expect(page.locator(ticketSelectors.detailPanel)).not.toBeVisible()
   })
@@ -241,7 +239,7 @@ baseUrl = false
     await expect(card.locator(externalReferenceSelectors.link)).toHaveCount(4)
     const wrapped = card.getByRole('group', { name: 'github references (gh)', exact: true }).locator(externalReferenceSelectors.link)
     await expect(wrapped).toHaveCount(3)
-    const hitChecks = await wrapped.evaluateAll(expandedReferenceHitChecks)
+    const hitChecks = await wrapped.evaluateAll(referenceHitChecks)
     await test.info().attach('wrapped-link-hit-boundaries', { body: JSON.stringify(hitChecks), contentType: 'application/json' })
     expect(hitChecks.map(({ top, bottom }) => ({ top, bottom }))).toEqual(Array.from({ length: 3 }, () => ({ top: true, bottom: true })))
     const firstBounds = (await wrapped.nth(0).boundingBox())!
@@ -251,8 +249,7 @@ baseUrl = false
     await page.context().route('https://github.example.test/**', route => route.fulfill({ body: '<h1>External issue</h1>', contentType: 'text/html' }))
     for (const [index, edge] of [[0, 'bottom'], [1, 'top']] as const) {
       const bounds = (await wrapped.nth(index).boundingBox())!
-      const extension = (Math.max(24, bounds.height) - bounds.height) / 2
-      const y = edge === 'bottom' ? bounds.y + bounds.height + extension - 1 : bounds.y - extension + 1
+      const y = edge === 'bottom' ? bounds.y + bounds.height - 1 : bounds.y + 1
       const popup = page.waitForEvent('popup')
       await page.mouse.click(bounds.x + bounds.width / 2, y)
       const opened = await popup
@@ -330,8 +327,8 @@ test('MDT-252 compact/light and comfortable/dark retain targets, contrast and ch
     const boardGeometry = await card.evaluate(badgeGeometry)
     await testInfo.attach(`board-badge-geometry-${theme}-${size}`, { body: JSON.stringify(boardGeometry), contentType: 'application/json' })
     expect(boardGeometry.external).toEqual(boardGeometry.related)
-    expect(boardGeometry.iconInsets.start).toBe(boardGeometry.iconInsets.top)
-    expect(boardGeometry.iconInsets.start).toBe(boardGeometry.iconInsets.bottom)
+    expect(boardGeometry.iconInsets.start).toBe(Number.parseFloat(boardGeometry.external.paddingInlineStart))
+    expect(boardGeometry.iconInsets.top).toBe((boardGeometry.external.height - iconSizes.jira.height) / 2)
     await page.mouse.move(0, 0)
     const restingLink = await link.evaluate(element => {
       const style = getComputedStyle(element)
@@ -374,17 +371,16 @@ test('MDT-252 compact/light and comfortable/dark retain targets, contrast and ch
       }
       const text = luminance(computed.color)
       const background = luminance(getComputedStyle(element.closest('[data-external-reference]')!).backgroundColor)
-      const hitHeight = Math.max(24, rect.height)
-      const extension = (hitHeight - rect.height) / 2
+      const hitHeight = rect.height
       const hitsLink = (y: number) => {
         const target = document.elementFromPoint(rect.x + rect.width / 2, y)
         return target === element || (target !== null && element.contains(target))
       }
-      return { width: rect.width, hitHeight, hitTop: hitsLink(rect.top - extension + 0.25), hitBottom: hitsLink(rect.bottom + extension - 0.25), font: Number.parseFloat(computed.fontSize), contrast: (Math.max(text, background) + 0.05) / (Math.min(text, background) + 0.05) }
+      return { width: rect.width, hitHeight, hitTop: hitsLink(rect.top + 0.25), hitBottom: hitsLink(rect.bottom - 0.25), font: Number.parseFloat(computed.fontSize), contrast: (Math.max(text, background) + 0.05) / (Math.min(text, background) + 0.05) }
     })
     const keyWidth = await link.locator('.external-reference__key').evaluate(element => element.getBoundingClientRect().width)
     expect(style.width).toBeCloseTo(keyWidth, 1)
-    expect(style.hitHeight).toBeGreaterThanOrEqual(24)
+    expect(style.hitHeight).toBeGreaterThan(0)
     expect(style.hitTop).toBe(true)
     expect(style.hitBottom).toBe(true)
     expect(style.font).toBeGreaterThanOrEqual(11)
@@ -403,8 +399,8 @@ test('MDT-252 compact/light and comfortable/dark retain targets, contrast and ch
     const viewerGeometry = await viewer.evaluate(badgeGeometry)
     await testInfo.attach(`viewer-badge-geometry-${theme}-${size}`, { body: JSON.stringify(viewerGeometry), contentType: 'application/json' })
     expect(viewerGeometry.external).toEqual(viewerGeometry.related)
-    expect(viewerGeometry.iconInsets.start).toBe(viewerGeometry.iconInsets.top)
-    expect(viewerGeometry.iconInsets.start).toBe(viewerGeometry.iconInsets.bottom)
+    expect(viewerGeometry.iconInsets.start).toBe(Number.parseFloat(viewerGeometry.external.paddingInlineStart))
+    expect(viewerGeometry.iconInsets.top).toBe((viewerGeometry.external.height - iconSizes.jira.height) / 2)
     const viewerLink = viewer.locator(externalReferenceSelectors.link).first()
     await viewerLink.hover()
     expect(await viewerLink.evaluate(element => ({ decoration: getComputedStyle(element).textDecorationLine, background: getComputedStyle(element).backgroundColor })))
@@ -443,8 +439,16 @@ test('MDT-252 style guide renders agreed badge flow in both themes', async ({ pa
       const first = links[0].getBoundingClientRect()
       const second = links[1].getBoundingClientRect()
       const text = links[0].querySelector('.external-reference__key')!.getBoundingClientRect()
-      return { linkWidth: first.width, textWidth: text.width, separation: second.left - first.right, gap: Number.parseFloat(getComputedStyle(element).columnGap) }
+      const badge = getComputedStyle(element)
+      const shared = getComputedStyle(document.querySelector('.chips .badge')!)
+      const icon = getComputedStyle(element.querySelector('.external-reference__icon')!)
+      return { linkWidth: first.width, textWidth: text.width, separation: second.left - first.right, gap: Number.parseFloat(badge.columnGap), rowGap: badge.rowGap, sharedGap: shared.gap, padding: badge.padding, sharedPadding: shared.padding, iconWidth: icon.width, sharedIconWidth: shared.fontSize, iconMargin: icon.marginInlineStart, hitExpansion: getComputedStyle(links[0], '::after').content }
     })
+    expect(keySpacing.padding).toBe(keySpacing.sharedPadding)
+    expect(keySpacing.rowGap).toBe(keySpacing.sharedGap)
+    expect(keySpacing.iconWidth).toBe(keySpacing.sharedIconWidth)
+    expect(keySpacing.iconMargin).toBe('0px')
+    expect(keySpacing.hitExpansion).toBe('none')
     expect(keySpacing.linkWidth).toBeCloseTo(keySpacing.textWidth, 1)
     expect(keySpacing.separation).toBeCloseTo(keySpacing.gap, 1)
     await section.screenshot({ path: testInfo.outputPath(`styleguide-external-${theme}.png`) })
@@ -471,7 +475,7 @@ test('MDT-252 style guide renders agreed badge flow in both themes', async ({ pa
   await group.scrollIntoViewIfNeeded()
   const inline = group.locator(':scope > a.external-reference__link')
   await expect(inline).toHaveCount(3)
-  const hits = await inline.evaluateAll(expandedReferenceHitChecks)
+  const hits = await inline.evaluateAll(referenceHitChecks)
   await testInfo.attach('styleguide-wrapped-hit-boundaries', { body: JSON.stringify(hits), contentType: 'application/json' })
   expect(new Set(hits.map(hit => hit.y)).size).toBeGreaterThan(1)
   expect(hits.map(({ top, bottom }) => ({ top, bottom }))).toEqual(Array.from({ length: 3 }, () => ({ top: true, bottom: true })))
