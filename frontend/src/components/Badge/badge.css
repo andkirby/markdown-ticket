@@ -132,11 +132,16 @@
 
   /* Inline glyph inside a badge (was h-3 w-3 on lucide icons in markup). */
   .badge__icon,
-  .external-reference__icon,
-  .external-reference__arrow {
+  .external-reference__icon {
     width: var(--fs-ui-sm);
     height: var(--fs-ui-sm);
     flex: none;
+  }
+
+  /* Secondary glyphs signal context without taking a full icon slot. */
+  .badge__icon--indicator {
+    width: 0.75em;
+    height: 0.75em;
   }
 
   /* =====================================================

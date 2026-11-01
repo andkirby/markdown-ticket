@@ -56,7 +56,7 @@ function ReferenceGroup({ references, query, renderLabel }: { references: Extern
         </span>
       )}
       {inline.map(({ reference, key }) => <ReferenceLink key={key} reference={reference} renderLabel={renderLabel} />)}
-      {hasLinks && <ArrowUpRight className="external-reference__arrow" aria-hidden="true" />}
+      {hasLinks && <ArrowUpRight className="badge__icon badge__icon--indicator external-reference__arrow" aria-hidden="true" />}
       {hasUnavailable && first.kind && <CircleAlert className="external-reference__icon" aria-label="Includes unavailable references" />}
       {details.length > 0 && (
         <Popover>
