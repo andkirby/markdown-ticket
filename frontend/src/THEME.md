@@ -248,7 +248,9 @@ These spacing and hit-target values are mode-independent and inherited in both
 themes. The standalone styleguide uses the real `.badge` class for chip metrics. Its
 external-reference examples mount the production React components through Vite
 at `/src/styleguide.html`; do not duplicate their markup or interaction logic.
-Direct-file viewing supports the static sections only.
+Direct-file viewing and MDT's raw HTML preview load the relative token/component
+styles for static sections. React demos require Vite and show an explicit
+fallback in raw preview; preview must not request uncompiled TSX modules.
 
 ---
 

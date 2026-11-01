@@ -59,6 +59,6 @@ All shortening is display-only. Never infer configuration from visible tickets o
 
 - Existing owners: `TicketAttributeTags.tsx`, `Badge/RelationshipBadge.tsx`, `QuickSearch/QuickSearchResults.tsx`, `TicketAttributes.tsx`.
 - Reusable owner: `frontend/src/components/Badge/ExternalReferenceBadges.tsx`; link/label rendering lives in `ExternalReferenceLink.tsx`, disclosure behavior in `ExternalReferencePopover.tsx`, and display-only splitting in `referenceLabel.ts`.
-- The styleguide mounts these production components through `frontend/src/styleguide/externalReferences.tsx`. Open `/src/styleguide.html` through Vite for live examples; direct-file viewing retains static sections and an explicit live-demo fallback.
+- The styleguide mounts these production components through `frontend/src/styleguide/externalReferences.tsx`. Open `/src/styleguide.html` through Vite for live examples. Direct-file viewing and MDT raw preview load relative static CSS and retain an explicit live-demo fallback, without requesting uncompiled TSX or changing preview isolation.
 - Semantic contract: `Badge/badge.css`, `THEME.md`, `BADGE_ARCHITECTURE.md`.
 - Browser acceptance: `tests/e2e/ticket/external-references.spec.ts` and `tests/e2e/quick-search/external-references.spec.ts`.

@@ -12,9 +12,9 @@
     static sections can also be opened directly.
   -->
   <script>
-    // Live demos load the app stylesheet through Vite. Keep file:// static
-    // sections usable without asking Vite to compile isolated @layer files.
-    if (location.protocol === 'file:') {
+    // Vite injects its client before this script and compiles the app CSS.
+    // Other hosts (including MDT raw preview) serve relative styles directly.
+    if (!document.querySelector('script[src$="/@vite/client"]')) {
       for (const href of ['styles/design-tokens.css', 'styles/components/tabs.css', 'styles/components/checkbox.css', 'components/Badge/badge.css', 'components/TicketCard/ticket.css', 'components/QuickSearch/quick-search.css']) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
@@ -140,7 +140,14 @@
     </article>
   </div>
 
-  <script type="module" src="./styleguide/externalReferences.tsx"></script>
+  <script>
+    if (document.querySelector('script[src$="/@vite/client"]')) {
+      const demo = document.createElement('script');
+      demo.type = 'module';
+      demo.src = './styleguide/externalReferences.tsx';
+      document.head.append(demo);
+    }
+  </script>
 
   <h2 id="quick-search-reference-metadata">quick search · reference placement</h2>
   <p class="note">Ticket identity and title lead. Project context and external badges share one wrapping metadata row. Issue numbers use relationship-link hover feedback: underline only, with no separate fill.</p>
@@ -732,6 +739,7 @@
         fill();
       });
       fill();
+      window.addEventListener('load', fill);
 
       /* ── Collapsed sort control demo ── */
       var ICONS = {
