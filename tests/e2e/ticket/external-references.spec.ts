@@ -382,7 +382,8 @@ test('MDT-252 compact/light and comfortable/dark retain targets, contrast and ch
       }
       return { width: rect.width, hitHeight, hitTop: hitsLink(rect.top - extension + 0.25), hitBottom: hitsLink(rect.bottom + extension - 0.25), font: Number.parseFloat(computed.fontSize), contrast: (Math.max(text, background) + 0.05) / (Math.min(text, background) + 0.05) }
     })
-    expect(style.width).toBeGreaterThanOrEqual(24)
+    const keyWidth = await link.locator('.external-reference__key').evaluate(element => element.getBoundingClientRect().width)
+    expect(style.width).toBeCloseTo(keyWidth, 1)
     expect(style.hitHeight).toBeGreaterThanOrEqual(24)
     expect(style.hitTop).toBe(true)
     expect(style.hitBottom).toBe(true)
@@ -437,6 +438,15 @@ test('MDT-252 style guide renders agreed badge flow in both themes', async ({ pa
   await expect(section.locator('.ticket-card')).toHaveCount(3)
   for (const theme of ['light', 'dark']) {
     await page.evaluate(theme => document.documentElement.classList.toggle('dark', theme === 'dark'), theme)
+    const keySpacing = await section.locator('.external-reference').first().evaluate(element => {
+      const links = [...element.querySelectorAll('a.external-reference__link')]
+      const first = links[0].getBoundingClientRect()
+      const second = links[1].getBoundingClientRect()
+      const text = links[0].querySelector('.external-reference__key')!.getBoundingClientRect()
+      return { linkWidth: first.width, textWidth: text.width, separation: second.left - first.right, gap: Number.parseFloat(getComputedStyle(element).columnGap) }
+    })
+    expect(keySpacing.linkWidth).toBeCloseTo(keySpacing.textWidth, 1)
+    expect(keySpacing.separation).toBeCloseTo(keySpacing.gap, 1)
     await section.screenshot({ path: testInfo.outputPath(`styleguide-external-${theme}.png`) })
     await page.locator('.search-reference-demo').screenshot({ path: testInfo.outputPath(`styleguide-search-metadata-${theme}.png`) })
   }
