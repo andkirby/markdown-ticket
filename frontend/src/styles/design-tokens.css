@@ -94,6 +94,7 @@
        These mode-independent metrics are inherited by .dark as well. */
     --badge-padding-block: 0.125rem; /* 2px */
     --badge-padding-inline: 0.375rem; /* 6px */
+    --badge-repository-max: 18ch; /* Repository label budget; issue number stays visible. */
     /* ── Radius scale — pick by ROLE, not by look ──
        Four semantic corners. Inputs, buttons, cards, and control groups share
        --radius-input so the header controls line up. Use bare var(), never a

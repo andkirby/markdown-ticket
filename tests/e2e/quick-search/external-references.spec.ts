@@ -90,7 +90,7 @@ test('MDT-252 physical keyboard reaches result links and details, then returns t
   const trigger = selected.locator(externalReferenceSelectors.detailsTrigger)
   await expect(trigger).toBeFocused()
   await page.keyboard.press('Enter')
-  await expect(page.locator(externalReferenceSelectors.details).locator(externalReferenceSelectors.link)).toHaveText('widgets#126')
+  await expect(page.locator(externalReferenceSelectors.details).locator(externalReferenceSelectors.link)).toHaveText('gh:acme/widgets#126')
   await page.keyboard.press('Escape')
   await expect(trigger).toBeFocused()
   await page.keyboard.press('Shift+F6')

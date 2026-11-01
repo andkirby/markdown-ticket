@@ -28,6 +28,7 @@
   .external-reference__link {
     display: inline-flex;
     align-items: center;
+    gap: var(--gap-xs);
     min-inline-size: 0;
     max-inline-size: 100%;
     color: inherit;
@@ -36,10 +37,30 @@
     text-decoration: none;
   }
   .external-reference__key {
+    display: inline-flex;
     min-inline-size: 0;
     overflow: clip;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .external-reference__repository {
+    display: inline-flex;
+    min-inline-size: 0;
+    max-inline-size: var(--badge-repository-max);
+  }
+  .external-reference__repository-start {
+    min-inline-size: 0;
+    overflow: clip;
+    text-overflow: ellipsis;
+  }
+  .external-reference__repository-end {
+    flex: none;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow: clip;
+  }
+  .external-reference__issue {
+    flex: none;
   }
   .external-reference__instance {
     flex: none;
@@ -74,9 +95,6 @@
     color: var(--primary-text);
     font-size: var(--fs-ui-sm);
   }
-  .external-reference__heading {
-    color: oklch(var(--foreground));
-  }
   .external-reference__detail {
     display: flex;
     flex-direction: column;
@@ -87,6 +105,7 @@
     align-self: start;
   }
   .external-reference__panel .external-reference__key {
+    display: block;
     white-space: normal;
     overflow-wrap: anywhere;
     overflow: visible;

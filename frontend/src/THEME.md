@@ -223,6 +223,7 @@ Choose spacing by role:
 | `--gap-lg` | 24px | Major section separation |
 | `--badge-padding-block` | 2px | Visible badge inset above/below content |
 | `--badge-padding-inline` | 6px | Visible badge inset before/after content |
+| `--badge-repository-max` | 18ch | Maximum inline repository label width; issue number remains separate |
 | `--sz-target-min` | 24px | Split-chip board-jump action target |
 
 The parent owns spacing between siblings via `gap`; children must not add
@@ -244,8 +245,10 @@ the external-reference variant. The split-chip board-jump action is a separate
 control zone and retains its explicit target size.
 
 These spacing and hit-target values are mode-independent and inherited in both
-themes. The standalone styleguide uses the real `.badge` class for chip metrics;
-it must not define a parallel padding/gap recipe.
+themes. The standalone styleguide uses the real `.badge` class for chip metrics. Its
+external-reference examples mount the production React components through Vite
+at `/src/styleguide.html`; do not duplicate their markup or interaction logic.
+Direct-file viewing supports the static sections only.
 
 ---
 
