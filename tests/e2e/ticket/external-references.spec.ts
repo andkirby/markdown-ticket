@@ -542,6 +542,19 @@ test('MDT-252 style guide renders agreed badge flow in both themes', async ({ pa
   await testInfo.attach('styleguide-wrapped-hit-boundaries', { body: JSON.stringify(hits), contentType: 'application/json' })
   expect(new Set(hits.map(hit => hit.y)).size).toBeGreaterThan(1)
   expect(hits.map(({ top, bottom }) => ({ top, bottom }))).toEqual(Array.from({ length: 3 }, () => ({ top: true, bottom: true })))
+  // Existing reader examples consume the legacy arrow class without the modifier.
+  await page.setViewportSize({ width: 1280, height: 900 })
+  const reader = page.locator('[data-reader-guide]')
+  const disclosure = reader.locator('[data-reader-action="details"]').first()
+  if (await disclosure.getAttribute('aria-expanded') === 'false')
+    await disclosure.click()
+  const legacyArrow = reader.locator('.external-reference__arrow').first()
+  await expect(legacyArrow).toBeVisible()
+  const legacyGeometry = await legacyArrow.evaluate(element => ({ width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height, font: Number.parseFloat(getComputedStyle(element).fontSize), badgeHeight: element.closest('.badge')!.getBoundingClientRect().height }))
+  expect(legacyGeometry.width).toBeCloseTo(legacyGeometry.font * 0.75, 1)
+  expect(legacyGeometry.height).toBe(legacyGeometry.width)
+  expect(legacyGeometry.badgeHeight).toBe(20)
+  await reader.locator('.reader-demo').first().screenshot({ path: testInfo.outputPath('reader-badge-arrow-compatibility.png') })
 })
 
 

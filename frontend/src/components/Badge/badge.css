@@ -161,10 +161,13 @@
     flex: none;
   }
 
-  /* Secondary glyphs signal context without taking a full icon slot. */
-  .badge__icon--indicator {
+  /* Keep the existing arrow class as a compatibility alias for consumers
+     outside the live badge component, including reader design examples. */
+  .badge__icon--indicator,
+  .external-reference__arrow {
     width: 0.75em;
     height: 0.75em;
+    flex: none;
   }
 
   /* =====================================================
